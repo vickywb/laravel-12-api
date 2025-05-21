@@ -22,7 +22,9 @@ Route::middleware('auth-api')->group(function () {
             ->controller(RoleController::class)
             ->group(function () {
                 Route::get('/', 'index');
-                
+                Route::post('/store', 'store');
+                Route::patch('{role}/update', 'update');
+                Route::delete('{role}/delete', 'destroy');
         });
     });
     
