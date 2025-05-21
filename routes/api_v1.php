@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\Admin\RoleController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 
 
@@ -25,6 +25,12 @@ Route::middleware('auth-api')->group(function () {
                 Route::post('/store', 'store');
                 Route::patch('{role}/update', 'update');
                 Route::delete('{role}/delete', 'destroy');
+        });
+
+        Route::prefix('categories')
+            ->controller()
+            ->group(function () {
+
         });
     });
     
