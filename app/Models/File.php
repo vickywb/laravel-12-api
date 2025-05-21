@@ -10,7 +10,11 @@ class File extends Model
         'name', 'directory', 'upload_at'
     ];
 
-    protected $casts = [
-        'upload_at' => 'datetime'
-    ];
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'upload_at' => 'datetime'
+        ];
+    }
 }
