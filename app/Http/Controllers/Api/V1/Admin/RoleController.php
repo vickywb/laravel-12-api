@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleStoreRequest;
 use App\Http\Requests\RoleUpdateRequest;
 use App\Http\Resources\RoleCollection;
+use App\Http\Resources\RoleResource;
 
 class RoleController extends Controller
 {
@@ -86,7 +87,7 @@ class RoleController extends Controller
 
     public function show(Role $role)
     {
-        return ResponseApiHelper::success('Role retrived successully.');
+        return ResponseApiHelper::success('Role retrived successully.', new RoleResource($role));
     }
     
     public function update(RoleUpdateRequest $request, Role $role)
