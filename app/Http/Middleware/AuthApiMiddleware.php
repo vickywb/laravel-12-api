@@ -24,11 +24,11 @@ class AuthApiMiddleware
 
         if (! $personalAccessToken) {
             LoggerHelper::error('Access Denied: Unauthorized, missing or invalid token.', [
-                'token' => $token
+                'token' => substr($token, 0, 5) . '...' . substr($token, -5),
             ]);
 
             return ResponseApiHelper::error('Access Denied: Unauthorized, missing or invalid token.', [
-                'token' => 'Token Invalid'
+                'token' => 'Token is Invalid'
             ], 401);
         }
 
@@ -36,11 +36,11 @@ class AuthApiMiddleware
 
         if (! $user) {
             LoggerHelper::error('Token not found.', [
-                'token' => $token
+                'token' => substr($token, 0, 5) . '...' . substr($token, -5)
             ]);
 
             return ResponseApiHelper::error('Access Denied: Unauthorized.', [
-                'token' => 'Token Invalid'
+                'token' => 'Token is Invalid'
             ], 401);
         }
 
@@ -50,19 +50,19 @@ class AuthApiMiddleware
             $personalAccessToken ? $personalAccessToken->delete() : null;
 
             LoggerHelper::warning('Token Invalid or Expired.', [
-                'token' => $token,
+                'token' => substr($token, 0, 5) . '...' . substr($token, -5),
                 'user_id' => $user->id
             ]);
 
             return ResponseApiHelper::error('Access Denied: Unauthorized.', [
-                'token' => 'Token Invalid.'
+                'token' => 'Token is Invalid.'
             ], 401);
         }
 
         $personalAccessToken->update(['last_used_at' => now()]);
 
         LoggerHelper::info('Token Validated.', [
-            'token' => $token,
+            'token' => substr($token, 0, 5) . '...' . substr($token, -5),
             'user_id' => $user->user_id
         ]);
 
