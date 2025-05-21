@@ -86,7 +86,7 @@ class RoleController extends Controller
 
     public function show(Role $role)
     {
-        return ResponseApiHelper::success('Role retrived successully.');;
+        return ResponseApiHelper::success('Role retrived successully.');
     }
     
     public function update(RoleUpdateRequest $request, Role $role)
