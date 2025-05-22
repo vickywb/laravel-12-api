@@ -140,14 +140,6 @@ class RoleController extends Controller
     {
         // Prevent deletion if the role has existing relationships with users
         if ($role->users()->exists()) {
-            // Log
-            LoggerHelper::error("Can't delete role: This Role has existing relationship with other entities.", [
-                'role' => [
-                    'id' => $role->id,
-                    'slug' => $role->slug
-                ]
-            ]);
-
             return ResponseApiHelper::error("Can't Delete Role: This Role has existing relationship with other entities.", [
                 'error' => 'This role is currently assigned to users and cannot be deleted.'
             ], 409);
