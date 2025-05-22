@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->string('description');
             $table->integer('stock');
-            $table->string('url_product');
+            $table->string('product_url');
             $table->timestamps();
 
             $table->foreignId('category_id')
