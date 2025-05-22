@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\CategoryController;
 use App\Http\Controllers\Api\V1\Admin\RoleController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 
@@ -23,14 +24,19 @@ Route::middleware('auth-api')->group(function () {
             ->group(function () {
                 Route::get('/', 'index');
                 Route::post('/store', 'store');
+                Route::get('{role}/show', 'show');
                 Route::patch('{role}/update', 'update');
                 Route::delete('{role}/delete', 'destroy');
         });
 
         Route::prefix('categories')
-            ->controller()
+            ->controller(CategoryController::class)
             ->group(function () {
-
+                Route::get('/', 'index');
+                Route::post('/store', 'store');
+                Route::get('{category}/show', 'show');
+                Route::patch('{category}/update', 'update');
+                Route::delete('{category}/delete', 'destroy');
         });
     });
     
