@@ -23,7 +23,7 @@ class ProductCollection extends ResourceCollection
                 'stock' => $product->stock,
                 'description' => $product->description,
                 'product_url' => $product->product_url,
-                'category' => $product->category->name
+                'category' => new CategoryResource($product->category)
             ];
         });
 
