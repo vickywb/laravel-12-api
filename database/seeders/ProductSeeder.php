@@ -16,6 +16,7 @@ class ProductSeeder extends Seeder
         $products = [
             [
                 'name' => 'Spatu',
+                'slug' =>  'spatu',
                 'price' => 10000,
                 'description' => 'spatu',
                 'stock' => 10,
@@ -24,6 +25,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Television',
+                'slug' => 'television',
                 'price' => 10000,
                 'description' => 'television',
                 'stock' => 10,
@@ -32,6 +34,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'T-Shirt',
+                'slug' => 't-shirt',
                 'price' => 10000,
                 'description' => 't-shirt',
                 'stock' => 10,
