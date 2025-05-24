@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\ProductController;
 use App\Http\Controllers\Api\V1\Admin\RoleController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 
@@ -37,6 +38,16 @@ Route::middleware('auth-api')->group(function () {
                 Route::get('{category}/show', 'show');
                 Route::patch('{category}/update', 'update');
                 Route::delete('{category}/delete', 'destroy');
+        });
+
+        Route::prefix('products')
+            ->controller(ProductController::class)
+            ->group(function () {
+                Route::get('/', 'index');
+                Route::post('/store', 'store');
+                Route::get('{product}/show', 'show');
+                Route::patch('{product}/update', 'update');
+                Route::delete('{product}/delete', 'destroy');
         });
     });
     
