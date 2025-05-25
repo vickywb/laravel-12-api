@@ -41,8 +41,10 @@ class AuthController extends Controller
     {
         // Check Role
         $userRole = Role::where('name', 'user')->first();
-        $emailCheck = User::where('email', $request->email)->first();
 
+        // Check is email exists
+        $emailCheck = User::where('email', $request->email)->first();
+        
         if ($emailCheck) {
             LoggerHelper::error('Email Already Taken.' , [
                 'email' => $request->email,
@@ -58,7 +60,7 @@ class AuthController extends Controller
         ]);
     
         $userData = $request->only([
-            'name', 'email', 'password', 'role_id', 'address', 'phone_number'
+            'name', 'email', 'password', 'role_id', 'address', 'phone_number', 'file_id'
         ]);
 
         try {
@@ -66,32 +68,35 @@ class AuthController extends Controller
             $user = new User($userData);
             $user = $this->userRepository->store($user);
 
-            if ($request->hasFile('image')) {
-                $file = $request->file('image');
+            // Check request has file
+            if ($request->hasFile('file')) {
+                $file = $request->file('file')->get();
 
                 new FileHelper($file, [
                     'file_name' => 'name',
                     'field_name' => 'directory',
-                    'extension' => $request->file('image')->getClientOriginalExtension(),
+                    'extension' => $request->file('file')->getClientOriginalExtension(),
                     'directory' => 'profile/',
                     'upload_at' => 'upload_at'
                 ], $request);
 
                 $fileData = $request->only([
-                    'name', 'directory', 'upload_at', 'image'
+                    'name', 'directory', 'upload_at'
                 ]);
-                $newFile = new File($fileData);
-                $uploadedFile = $this->fileRepository->store($newFile);
 
+                $uploadedFile = $this->fileRepository->store($fileData);
                 $request->merge([
                     'file_id' => $uploadedFile->id
                 ]);
             }
-            
+
+            // Get File id
+            $fileId = $request->input('file_id');
+
             // Create or Update data User Profile
             $user->userProfile()->updateOrCreate([
                 'user_id' => $user->id,
-                'file_id' => $uploadedFile->id,
+                'file_id' => $fileId,
                 'address' => $userData['address'],
                 'phone_number' => $userData['phone_number']
             ]);
