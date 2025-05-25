@@ -12,9 +12,9 @@ class FileRepository
         $this->file = $file;
     }
 
-    public function store(File $file)
+    public function store($data)
     {
-        $file->save();
+        $file = $this->file->create($data);
 
         return $file;
     }
