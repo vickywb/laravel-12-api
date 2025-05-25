@@ -24,7 +24,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'email' => 'required|email',
-            'password' => ['required', Password::min(6)->symbols()->letters()->numbers()->mixedCase()]
+            'password' => ['required', Password::min(6)->symbols()->letters()->numbers()->mixedCase()],
+            'file' => 'mimes:jpg,png,jpeg|max:2048'
         ];
     }
 }
