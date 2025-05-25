@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class FileHelper
 {
-    public function __construct($file, array $params = [], $request) 
+    public function __construct($fileContent, array $params = [], $request) 
     {    
         // Determine file extension
         $extension = ! empty($params['extension']) ? $params['extension'] : 'txt';
@@ -16,7 +16,7 @@ class FileHelper
         $fileName = Str::random(16);
 
         // Generate DateTime
-        $upload_at = now();
+        $upload_at = now()->toDateString();
 
         // Define the path by which we will store the image
         $directoryName = 'file' . '/' . $fileName . '.' . $extension;
@@ -26,7 +26,7 @@ class FileHelper
         }
 
         // Store File in the public storage
-        Storage::put($directoryName,file_get_contents($file), 'public');
+        Storage::put($directoryName,(string)$fileContent, 'public');
 
         // Merge the file name column to request
         $request->merge([
