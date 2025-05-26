@@ -123,7 +123,7 @@ class AuthController extends Controller
         }
 
         return ResponseApiHelper::success("Welcome" . ' ' . ucfirst($user->name) . ' ' . "Your Account has been Successfully Created.", [
-            'name' => $user->email,
+            'name' => $user->name,
             'email' => $user->email
         ]);
     }
