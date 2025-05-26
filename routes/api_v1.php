@@ -48,6 +48,12 @@ Route::middleware('auth-api')->group(function () {
                 Route::get('{product}/show', 'show');
                 Route::patch('{product}/update', 'update');
                 Route::delete('{product}/delete', 'destroy');
+
+                // Product Files
+                Route::get('{product}/product-files', 'fileIndex');
+                Route::post('{product}/product-files/store', 'fileStore');
+                Route::patch('{product}/product-files/update/{file}', 'fileUpdate');
+                Route::delete('{product}/product-files/delete/{file}', 'fileDestroy');
         });
     });
     
