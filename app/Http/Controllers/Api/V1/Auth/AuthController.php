@@ -46,6 +46,8 @@ class AuthController extends Controller
         $emailCheck = User::where('email', $request->email)->first();
         
         if ($emailCheck) {
+
+            // Log
             LoggerHelper::error('Email Already Taken.' , [
                 'email' => $request->email,
                 'register_at' => now()
@@ -77,11 +79,12 @@ class AuthController extends Controller
                     'field_name' => 'directory',
                     'extension' => $request->file('file')->getClientOriginalExtension(),
                     'directory' => 'profile/',
+                    'file_url' => 'file_url',
                     'upload_at' => 'upload_at'
                 ], $request);
 
                 $fileData = $request->only([
-                    'name', 'directory', 'upload_at'
+                    'name', 'directory', 'upload_at', 'file_url'
                 ]);
 
                 $uploadedFile = $this->fileRepository->store($fileData);
@@ -103,20 +106,23 @@ class AuthController extends Controller
 
             DB::commit();
 
+            // Log
             LoggerHelper::info('User has been Successfully Registered.', [
                 'action' => 'Register',
                 'model' => 'User',
-                'data' => $userData
+                'data' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role_id' => $user->role->id 
+                ]
             ]);
 
         } catch (\Throwable $th) {
             DB::rollBack();
 
+            // Log
             LoggerHelper::error('Failed Registration.' ,[
-                'request_data' => $userData,
                 'error' => $th->getMessage(),
-                'file' => $th->getFile(),
-                'line' => $th->getLine(),
             ]);
 
             return ResponseApiHelper::error('An error occurred during registration. Please try again later.');
@@ -136,7 +142,7 @@ class AuthController extends Controller
         // Validate if user exists and password is correct
         if (! $user || !Hash::check($request->password, $user->password)) {
             
-            // Log failed login attempt for monitoring security issues
+            // Log
             LoggerHelper::notice('Email Or Password is Incorrect!.', [
                 'email' => $request->email,
                 'login_at' => now()
@@ -151,10 +157,10 @@ class AuthController extends Controller
         // Genereate Token Authentication for User After Success Logged In
         $token = $user->createToken('auth-token', [$user->role->name], now()->addHour())->plainTextToken;
 
-        // Log successful login attempt for auditing purposes
+        // Log
         LoggerHelper::info('User Successfully Logged In.', [
             'email' => $user->email,
-            'token' => $token
+            'token' => substr($token, 0, 5) . '...' . substr($token, -5)
         ]);
         
         // Return Success Response with User Data and Token
@@ -177,17 +183,19 @@ class AuthController extends Controller
 
             DB::commit();
 
+            // Log
             LoggerHelper::info('User Successfully Logged Out, and Token was Revoked.', [
                 'action' => 'Logout',
                 'model' => 'PersonalAccessToken',
-                'token' => $token
+                'token' => substr($token, 0, 5) . '...' . substr($token, -5)
             ]);
 
         } catch (\Throwable $th) {
             DB::rollBack();
 
+            // Log
             LoggerHelper::error('Failed Logout.', [
-                'token' => $token,
+                'token' => substr($token, 0, 5) . '...' . substr($token, -5),
                 'error' => $th->getMessage(),
             ]);
 
