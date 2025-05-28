@@ -15,15 +15,18 @@ class FileHelper
         // Generate Random Name
         $fileName = Str::random(16);
 
-        // Generate DateTime
-        $upload_at = now()->toDateString();
-
         // Define the path by which we will store the image
         $directoryName = 'file' . '/' . $fileName . '.' . $extension;
+        
+        // Generate DateTime
+        $upload_at = now()->toDateString();
 
         if (isset($params['directory'])) {
             $directoryName = 'file' . '/' . $params['directory'] . $fileName . '.' . $extension;
         }
+
+        // File Url
+        $fileUrl = env('APP_URL') . 'storage/' . $directoryName;
 
         // Store File in the public storage
         Storage::put($directoryName,(string)$fileContent, 'public');
@@ -32,6 +35,7 @@ class FileHelper
         $request->merge([
             $params['field_name'] => $directoryName,
             $params['file_name'] => $fileName,
+            $params['file_url'] => $fileUrl,
             $params['upload_at'] => $upload_at
         ]);
     }
