@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('directory');
+            $table->string('file_url');
             $table->dateTime('upload_at');
             $table->timestamps();
         });
