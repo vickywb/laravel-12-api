@@ -32,4 +32,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductFile::class);
     }
+
+    public function getFileAttribute()
+    {
+        return $this->productFiles->first()?->file;
+    }
 }
