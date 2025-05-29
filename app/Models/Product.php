@@ -33,6 +33,7 @@ class Product extends Model
         return $this->hasMany(ProductFile::class);
     }
 
+    // Accessor
     public function getFileAttribute()
     {
         return $this->productFiles->first()?->file;
