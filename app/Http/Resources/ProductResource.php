@@ -22,7 +22,8 @@ class ProductResource extends JsonResource
             'stock' => $this->stock,
             'description' => $this->description,
             'product_url' => $this->product_url,
-            'category' => new CategoryResource($this->category)
+            'category' => new CategoryResource($this->category),
+            'product_file' => new FileResource($this->file)
         ];
     }
 }

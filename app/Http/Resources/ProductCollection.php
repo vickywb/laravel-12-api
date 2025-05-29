@@ -24,7 +24,8 @@ class ProductCollection extends ResourceCollection
                 'stock' => $product->stock,
                 'description' => $product->description,
                 'product_url' => $product->product_url,
-                'category' => new CategoryResource($product->category)
+                'category' => new CategoryResource($product->category),
+                'product_file' => new FileResource($product->file)
             ];
         });
 
