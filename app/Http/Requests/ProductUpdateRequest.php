@@ -26,7 +26,7 @@ class ProductUpdateRequest extends FormRequest
             'price' => 'required|numeric',
             'stock' => 'required|integer|min:1',
             'description' => 'required|string|max:255',
-            'product_url'  => 'required|string|max:255'
+            'category_id' => 'required',
         ];
     }
 }
