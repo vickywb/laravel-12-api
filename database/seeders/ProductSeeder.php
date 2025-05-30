@@ -15,6 +15,7 @@ class ProductSeeder extends Seeder
     {
         $products = [
             [
+                'user_id' => 1,
                 'name' => 'Spatu',
                 'slug' =>  'spatu',
                 'price' => 10000,
@@ -24,6 +25,7 @@ class ProductSeeder extends Seeder
                 'product_url' => 'http://localhost:8000/product/spatu',
             ],
             [
+                'user_id' => 1,
                 'name' => 'Television',
                 'slug' => 'television',
                 'price' => 10000,
@@ -33,6 +35,7 @@ class ProductSeeder extends Seeder
                 'product_url' => 'http://localhost:8000/product/television',
             ],
             [
+                'user_id' => 1,
                 'name' => 'T-Shirt',
                 'slug' => 't-shirt',
                 'price' => 10000,
