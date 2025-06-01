@@ -10,7 +10,7 @@ class Product extends Model
 {
     protected $fillable = [
         'name', 'price', 'slug', 'stock', 'description', 'product_url', 
-        'file_id', 'category_id'
+        'category_id', 'user_id'
     ];
 
     protected $casts = [
@@ -31,6 +31,11 @@ class Product extends Model
     public function productFiles(): HasMany
     {
         return $this->hasMany(ProductFile::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     // Accessor
