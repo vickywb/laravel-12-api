@@ -74,7 +74,7 @@ class CategoryController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while processing your request for category data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while processing store category data. Please try again later.');
         }
 
         return ResponseApiHelper::success('New Category successfully created.', [
@@ -124,7 +124,7 @@ class CategoryController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while updating the category data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while proccess update category data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Category has been successfully updated.', [
@@ -167,7 +167,7 @@ class CategoryController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while trying to delete the role data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while proccessing delete category data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Category data has been successfully deleted.');

@@ -74,7 +74,7 @@ class RoleController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while processing your request for role data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while processing store role data. Please try again later.');
         }
 
         return ResponseApiHelper::success('New Role successfully created.', [
@@ -125,7 +125,7 @@ class RoleController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while updating the role data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while proccessing update role data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Role has been successfully updated.', [
@@ -168,7 +168,7 @@ class RoleController extends Controller
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while trying to delete the role data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while processing delete role data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Role data has been successfully deleted.');
