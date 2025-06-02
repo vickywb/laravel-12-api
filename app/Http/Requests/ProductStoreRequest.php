@@ -27,6 +27,7 @@ class ProductStoreRequest extends FormRequest
             'stock' => 'required|integer|min:1',
             'description' => 'required|string|max:255',
             'category_id' => 'required',
+            'file_ids' => 'required'
         ];
     }
 }
