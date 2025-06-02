@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Helpers\AuthHelper;
 use App\Models\Role;
 use App\Models\User;
 use App\Helpers\FileHelper;
@@ -17,6 +18,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Models\File;
 use App\Repository\UserProfileRepository;
 use Illuminate\Support\Facades\RateLimiter;
@@ -203,5 +205,55 @@ class AuthController extends Controller
         }
 
         return ResponseApiHelper::success('Successfully Logged Out.',);
+    }
+
+    public function updateProfile(UpdateProfileRequest $request)
+    {
+        $userLogin = AuthHelper::getUserFromToken(request()->bearerToken());
+        $userId = $userLogin->id;
+
+        $request->merge([
+            'user_id' => $userId
+        ]);
+
+        $data = $request->only([
+            'name', 'email', 'phone_number', 'address', 'file_id', 'user_id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $user = User::findOrFail($userId);
+            $user->update([
+                'name' => $data['name'],
+                'email' => $data['email']
+            ]);
+
+            $user->userProfile()->update([
+                'user_id' => $userId,
+                'phone_number' => $data['phone_number'],
+                'address' => $data['address'],
+                'file_id' =>  $data['file_id'] 
+            ]);
+
+            DB::commit();
+
+            // Log
+            LoggerHelper::info('User Profile successfully updated.', [
+                'data' => $data
+            ]);
+            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            // Log
+            LoggerHelper::error('Failed update profile.', [
+                'error' => $th->getMessage()
+            ]);
+
+            return ResponseApiHelper::error('An error occured during upload profile process, please try again later.');
+        }
+
+        return ResponseApiHelper::success('User Profile successfully updated.');
     }
 }
