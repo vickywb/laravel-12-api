@@ -65,7 +65,9 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
+
+    'schedule_timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
