@@ -22,7 +22,7 @@ class FileStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'files.*' => 'required|file|mimes:jpg,png|max:2048'
+            'files.*' => 'required|file|mimes:jpg,png,jpeg|max:2048'
         ];
     }
 }
