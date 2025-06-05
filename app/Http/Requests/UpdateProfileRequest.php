@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Helpers\AuthHelper;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -20,10 +23,9 @@ class UpdateProfileRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
+    {                
         return [
             'name' => 'string|max:50',
-            'email' => 'string|unique:users,email' . $this->id,
             'phone_number' => 'string|digits_between:8,15',
             'address' => 'string|max:255',
             'file_id' => 'required'
