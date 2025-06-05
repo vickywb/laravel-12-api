@@ -25,9 +25,20 @@ class FileController extends Controller
     public function upload(FileStoreRequest $request, File $file)
     {
         $dataFiles = [];
-
         $user = AuthHelper::getUserFromToken(request()->bearerToken());
-        $directory = $user->role->slug === 'admin' ? 'product/' : 'profile/';
+
+        $directory = $user?->role->slug === 'admin' ? 'product/' : 'profile/';
+
+        // // Check user only can upload 1 file
+        if ((!$user || $user?->role->slug === 'user') && count($request->file('files')) > 1) {
+            // Log
+            LoggerHelper::error('Failed to upload profile', [
+                'email' => $user?->email,
+                'upload_at' => now()
+            ]);
+
+            return ResponseApiHelper::error('Failed to upload profile, please try again later.');
+        }
 
         try {
             DB::beginTransaction();
@@ -35,7 +46,7 @@ class FileController extends Controller
             $files = $request->file('files');
 
             foreach ($files as $file) {
-                new FileHelper($file->get(), [
+                FileHelper::uploadFile($file->get(), [
                     'file_name' => 'name',
                     'field_name' => 'directory',
                     'extension' => $file->getClientOriginalExtension(),
