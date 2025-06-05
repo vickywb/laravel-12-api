@@ -2,20 +2,35 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Helpers\ResponseApiHelper;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\ProductCollection;
-use App\Http\Resources\ProductResource;
+use App\Helpers\AuthHelper;
+use App\Helpers\FileHelper;
+use App\Helpers\LoggerHelper;
 use App\Models\Product;
-use App\Repository\ProductRepository;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Helpers\ResponseApiHelper;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Repository\ProductRepository;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductCollection;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
+use App\Models\Category;
+use App\Models\File;
+use App\Repository\FileRepository;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    private $productRepository;
+    private $productRepository, $fileRepository;
 
-    public function __construct(ProductRepository $productRepository) {
+    public function __construct(
+        ProductRepository $productRepository,
+        FileRepository $fileRepository
+    ) {
         $this->productRepository = $productRepository;
+        $this->fileRepository = $fileRepository;
     }
 
     public function index()
@@ -35,9 +50,65 @@ class ProductController extends Controller
         return ResponseApiHelper::success($message, new ProductCollection($products));
     }
 
-    public function store(Request $request)
+    public function store(ProductStoreRequest $request)
     {
-        //
+        $productFiles = [];
+        $user = AuthHelper::getUserFromToken($request->bearerToken());
+
+        $category = Category::where('id', $request->category_id)->first();
+        $slug = Str::slug($request->name);
+        $productURL = config('app.url') . '/' . 'products' . '/' . $slug;
+
+        $request->merge([
+            'slug' => $slug,
+            'product_url' => $productURL,
+            'category_id' => $category->id,
+            'user_id' => $user->id,
+        ]);
+
+        $productData = $request->only([
+            'name', 'slug', 'price', 'description', 'stock', 'product_url', 'category_id', 'user_id'
+        ]);
+        
+        try {
+            DB::beginTransaction();
+
+            $product = new Product($productData);
+            $product = $this->productRepository->store($product);
+
+            foreach ($request->file_ids as $fileId) {
+                $productFiles[] = [
+                    'product_id' => $product->id,
+                    'file_id' => $fileId
+                ];
+            }
+
+            $product->productFiles()->createMany($productFiles);
+
+            DB::commit();
+
+            // Log
+            LoggerHelper::info('Product data successfully stored in the database.', [
+                'action' => 'Store',
+                'model' =>  'product',
+                'data' => $productData,
+                'file_data' => $productFiles
+            ]);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            // Log
+            LoggerHelper::error('Failed to store product data in database.', [
+                'data' => $productData,
+                'file_data' => $productFiles,
+                'error' => $th->getMessage()
+            ]);
+
+            return ResponseApiHelper::error('An error occurred while processing store product data. Please try again later.');
+        }
+
+        return ResponseApiHelper::success('New Product successfully created.');
     }
 
     public function show(Product $product)
@@ -45,13 +116,133 @@ class ProductController extends Controller
         return ResponseApiHelper::success('Product retrived successfully', new ProductResource($product));
     }
 
-    public function update(Request $request, string $id)
+    public function update(ProductUpdateRequest $request, Product $product)
     {
-        //
+        $productFiles = [];
+
+        $category = Category::where('id', $request->category_id)->first();
+        $slug = Str::slug($request->name);
+        $productURL = config('app.url') . '/' . 'products' . '/' . $slug;
+
+        $request->merge([
+            'slug' => $slug,
+            'product_url' => $productURL,
+            'category_id' => $category->id
+        ]);
+
+        $productData = $request->only([
+            'name', 'slug', 'price', 'description', 'stock', 'product_url', 'category_id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $product = $product->fill($productData);
+            $product = $this->productRepository->store($product);
+            
+            // Store old file_id
+            $oldFileIds = $product->productFiles()->pluck('file_id')->toArray();
+
+            // Get new file id from request
+            $newFileIds = $request->file_ids;
+
+            foreach ($newFileIds as $fileId) {
+                $productFiles[] = [
+                    'product_id' => $product->id,
+                    'file_id' => $fileId
+                ];
+            }
+
+            $product->productFiles()->delete();
+            $product->productFiles()->createMany($productFiles);
+
+            DB::commit();
+
+            // Log
+            LoggerHelper::info('Product data successfully updated in database.', [
+                'action' => 'Update',
+                'model' => 'product',
+                'data' => $productData,
+            ]);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            // Log
+            LoggerHelper::error('Failed to update product data in database.', [
+                'data' => $productData,
+                'file_data' => $productFiles,
+                'error' => $th->getMessage()
+            ]);
+
+            return ResponseApiHelper::error('An error occurred while processing update product data. Please try again later.');
+
+        } finally {
+            
+            // Check file_ids
+            $unusedFileIds = array_diff($oldFileIds, $newFileIds);
+            FileHelper::deleteUnusedFiles($unusedFileIds);
+            // Log unused file ids
+            LoggerHelper::info('Unused file id has been deleted.', [
+                'action' => 'Delete',
+                'model' => 'file',
+                'unused_file_ids' => $unusedFileIds
+            ]);
+        }
+
+        return ResponseApiHelper::success('Product has been successfully updated.');
     }
 
-    public function destroy(string $id)
+    public function destroy(Product $product)
     {
-        //
+        try {
+            DB::beginTransaction();
+
+            // Check is product has file
+            if ($product->productFiles()->exists()) {
+                foreach ($product->productFiles as $productFile) {
+                    
+                    if ($productFile->file_id) {
+                        $oldFilePath = $productFile->file->directory;
+                    }
+
+                    if (isset($oldFilePath)) {
+                        Storage::delete($oldFilePath);
+                    }
+
+                    $productFileId = File::find($productFile->file->id);
+                    
+                    if ($productFileId) {
+                        $deleteFileId = $productFileId->id;
+                        $productFileId->delete();
+                    }
+                }
+            }
+
+            $product->delete();
+
+            DB::commit();
+
+            // Log
+            LoggerHelper::info('Product data successfully deleted.', [
+                'action' => 'delete',
+                'model' => 'Product',
+                'delete_product_id' => $product->id,
+                'delete_product_file_id' => $deleteFileId
+            ]);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            // Log
+            LoggerHelper::error('Failed to delete product data.', [
+                'data' => $product,
+                'error' => $th->getMessage()
+            ]);
+
+            return ResponseApiHelper::error('An error occurred while processing delete product data. Please try again later.');
+        }
+
+        return ResponseApiHelper::success('Product has been successfully deleted.');
     }
 }
