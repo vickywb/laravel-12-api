@@ -2,12 +2,13 @@
 
 namespace App\Helpers;
 
-use Illuminate\Support\Facades\Storage;
+use App\Models\File;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class FileHelper
 {
-    public function __construct($fileContent, array $params = [], $request) 
+    public static function uploadFile($fileContent, array $params = [], $request) 
     {    
         // Determine file extension
         $extension = ! empty($params['extension']) ? $params['extension'] : 'txt';
@@ -38,5 +39,21 @@ class FileHelper
             $params['file_url'] => $fileUrl,
             $params['upload_at'] => $upload_at
         ]);
+    }
+
+    public static function deleteUnusedFiles($unusedFileIds)
+    {
+        // Check if there are any unused file ids
+        foreach ($unusedFileIds as $unusedFileId) {
+            $file = File::find($unusedFileId);
+
+            if ($file && Storage::exists($file->directory)) {
+                Storage::delete($file->directory);
+            }
+
+            if ($file) {
+                $file->delete();
+            }
+        }
     }
 }
