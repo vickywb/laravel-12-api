@@ -72,36 +72,10 @@ class AuthController extends Controller
             $user = new User($userData);
             $user = $this->userRepository->store($user);
 
-            // Check request has file
-            if ($request->hasFile('file')) {
-                $file = $request->file('file')->get();
-
-                new FileHelper($file, [
-                    'file_name' => 'name',
-                    'field_name' => 'directory',
-                    'extension' => $request->file('file')->getClientOriginalExtension(),
-                    'directory' => 'profile/',
-                    'file_url' => 'file_url',
-                    'upload_at' => 'upload_at'
-                ], $request);
-
-                $fileData = $request->only([
-                    'name', 'directory', 'upload_at', 'file_url'
-                ]);
-
-                $uploadedFile = $this->fileRepository->store($fileData);
-                $request->merge([
-                    'file_id' => $uploadedFile->id
-                ]);
-            }
-
-            // Get File id
-            $fileId = $request->input('file_id');
-
             // Create or Update data User Profile
             $user->userProfile()->updateOrCreate([
                 'user_id' => $user->id,
-                'file_id' => $fileId,
+                'file_id' => $userData['file_id'] ?? null,
                 'address' => $userData['address'],
                 'phone_number' => $userData['phone_number']
             ]);
@@ -211,13 +185,13 @@ class AuthController extends Controller
     {
         $userLogin = AuthHelper::getUserFromToken(request()->bearerToken());
         $userId = $userLogin->id;
-
+        
         $request->merge([
             'user_id' => $userId
         ]);
 
         $data = $request->only([
-            'name', 'email', 'phone_number', 'address', 'file_id', 'user_id'
+            'name', 'phone_number', 'address', 'file_id', 'user_id'
         ]);
 
         try {
@@ -226,14 +200,16 @@ class AuthController extends Controller
             $user = User::findOrFail($userId);
             $user->update([
                 'name' => $data['name'],
-                'email' => $data['email']
             ]);
+
+            $oldFileId = $user->userProfile()->pluck('file_id')->toArray();
+            $newFileId = $data['file_id'];
 
             $user->userProfile()->update([
                 'user_id' => $userId,
                 'phone_number' => $data['phone_number'],
                 'address' => $data['address'],
-                'file_id' =>  $data['file_id'] 
+                'file_id' =>  $newFileId 
             ]);
 
             DB::commit();
@@ -252,6 +228,18 @@ class AuthController extends Controller
             ]);
 
             return ResponseApiHelper::error('An error occured during upload profile process, please try again later.');
+            
+        } finally {
+
+            $unusedFileId = array_diff($oldFileId, [$newFileId]);
+            FileHelper::deleteUnusedFiles($unusedFileId);
+
+            // Log unused file
+            LoggerHelper::info('Unused file id has been deleted.', [
+                'action' => 'Delete',
+                'model' => 'file',
+                'unused_file_id' => $unusedFileId
+            ]);
         }
 
         return ResponseApiHelper::success('User Profile successfully updated.');
