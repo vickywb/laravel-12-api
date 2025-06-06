@@ -23,7 +23,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->foreignId('role_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('role_id')->constrained()->onUpdate('cascade')->onDelete('cascade')->default(2); // Default role_id is 2 (user)
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
