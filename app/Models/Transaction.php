@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Transaction extends Model
+{
+    protected $fillable = [ 
+        'user_id',
+        'order_id',
+        'payment_method',
+        'total_price',
+        'payment_status',
+        'paid_at'
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'total_price' => 'string'
+    ];
+
+    //Relatioship
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+}
