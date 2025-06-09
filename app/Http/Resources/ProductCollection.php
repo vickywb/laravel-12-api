@@ -15,7 +15,8 @@ class ProductCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        $products = $this->collection->transform(function ($product) use ($request) {
+        $products = $this->collection->transform(function ($product){
+         
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -25,7 +26,7 @@ class ProductCollection extends ResourceCollection
                 'description' => $product->description,
                 'product_url' => $product->product_url,
                 'category' => new CategoryResource($product->category),
-                'product_file' => new FileResource($product->file)
+                'product_file' => new FileResource($product->productFile ?? null)
             ];
         });
 
