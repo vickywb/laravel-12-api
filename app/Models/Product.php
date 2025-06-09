@@ -39,8 +39,10 @@ class Product extends Model
     }
 
     // Accessor
-    public function getFileAttribute()
+    public function getProductFileAttribute()
     {
-        return $this->productFiles->first()?->file;
+        foreach ($this->productFiles as $productFile) {
+            return $productFile->file;
+        }
     }
 }
