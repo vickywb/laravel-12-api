@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Faker\Core\File;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class UserCollection extends ResourceCollection
+{
+    /**
+     * Transform the resource collection into an array.
+     *
+     * @return array<int|string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        $users = $this->collection->transform(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role ? $user->role->name : null,
+                'user_profile' => new FileResource($user->userProfile->file ?? null)
+            ];
+        });
+
+        return $users->toArray();
+    }
+}
