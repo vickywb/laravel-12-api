@@ -20,7 +20,7 @@ class FileHelper
         $directoryName = 'file' . '/' . $fileName . '.' . $extension;
         
         // Generate DateTime
-        $upload_at = now()->toDateString();
+        $upload_at = now();
 
         if (isset($params['directory'])) {
             $directoryName = 'file' . '/' . $params['directory'] . $fileName . '.' . $extension;
