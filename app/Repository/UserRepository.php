@@ -15,6 +15,9 @@ class UserRepository
     public function get($params = [])
     {
         $user = $this->user
+            ->when(!empty($params['with']), function($query) use ($params) {
+                return $query->with($params['with']);
+            })
             ->when(!empty($params['search']['name']), function($query) use ($params) {
                 return $query->where('name', 'LIKE', '%' . $params['search']['name'] . '%');
             });
