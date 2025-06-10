@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('order_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onUpdate('cascade')->onDelete('cascade'); // User who made the transaction
+            $table->string('invoice_number')->unique()->index(); // Unique invoice number for the transaction
+            $table->string('invoice_url')->nullable(); // URL to the invoice PDF or page
             $table->string('payment_method');
             $table->decimal('total_price', 16, 2);
             $table->string('payment_status')->default('unpaid')->index(); // unpaid, paid, refunded
