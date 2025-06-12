@@ -121,11 +121,10 @@ class RoleController extends Controller
             // Log
             LoggerHelper::error('Failed to update role data in database.', [
                 'request_data' => $data,
-                'data' => $role,
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while proccessing update role data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while processing update role data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Role has been successfully updated.', [
@@ -163,7 +162,7 @@ class RoleController extends Controller
             DB::rollBack();
 
             // Log
-            LoggerHelper::error('Failed to delete role data.', [
+            LoggerHelper::error('Failed to delete role data from database.', [
                 'data' => $role,
                 'error' => $th->getMessage()
             ]);
