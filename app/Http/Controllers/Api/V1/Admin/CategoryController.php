@@ -69,7 +69,7 @@ class CategoryController extends Controller
             DB::rollBack();
 
             // Log
-            LoggerHelper::error('Failed to store data in the database', [
+            LoggerHelper::error('Failed to store category data in the database', [
                 'request_data' => $data,
                 'error' => $th->getMessage()
             ]);
@@ -162,12 +162,12 @@ class CategoryController extends Controller
             DB::rollBack();
 
             // Log
-            LoggerHelper::error('Failed to delete category data.', [
+            LoggerHelper::error('Failed to delete category data from database.', [
                 'data' => $category,
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while proccessing delete category data. Please try again later.');
+            return ResponseApiHelper::error('An error occurred while processing delete category data. Please try again later.');
         }
 
         return ResponseApiHelper::success('Category data has been successfully deleted.');
