@@ -141,7 +141,7 @@ class CategoryController extends Controller
         if ($category->products()->exists()) {
             return ResponseApiHelper::error("Can't Delete Category: This Category has existing relationship with other entities.", [
                 'error' => 'This category is currently assigned to products and cannot be deleted.'
-            ], 409);
+            ], 400);
         }
 
         try {
