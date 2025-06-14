@@ -11,7 +11,7 @@ class ProductDiscountUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class ProductDiscountUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'product_id' => 'required|exists:products,id',
+            'discount_price' => 'required|numeric|min:0',
+            'start_at' => 'required|date_format:Y-m-d H:i:s',
+            'end_at' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_at',
         ];
     }
 }
