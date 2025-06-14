@@ -27,6 +27,9 @@ class DiscountController extends Controller
         $discounts = $this->discountRepository->get([
             'search' => [
                 'code' => request()->code,
+                'active' => request()->active,
+                'expired' => request()->expired,
+                'upcoming' => request()->upcoming,
                 'product_name' => request()->product_name,
             ],
             'page' => 5,
