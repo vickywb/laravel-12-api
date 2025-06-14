@@ -18,6 +18,15 @@ class DiscountRepository
         $discounts = $this->discount
             ->when(!empty($params['search']['code']), function ($query) use ($params) {
                 return $query->where('code', 'LIKE', '%' . $params['search']['code'] . '%');
+            })
+            ->when(!empty($params['search']['active']), function ($query) use ($params) {
+                return $query->where('start_at', '<=', now())->where('end_at', '>=', now());
+            })
+            ->when(!empty($params['search']['expired']), function ($query) use ($params) {
+                return $query->where('end_at', '<', now());
+            })
+            ->when(!empty($params['search']['upcoming']), function ($query) use ($params) {
+                return $query->where('start_at', '>', now());
             });
 
         if (!empty($params['page'])) {
