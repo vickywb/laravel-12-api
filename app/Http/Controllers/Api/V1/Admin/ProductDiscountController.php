@@ -99,7 +99,7 @@ class ProductDiscountController extends Controller
         try {
             DB::beginTransaction();
 
-            $productDiscount = $this->productDiscount->fill($data);
+            $productDiscount = $productDiscount->fill($data);
             $productDiscount = $this->productDiscountRepository->store($productDiscount);
 
             DB::commit();
