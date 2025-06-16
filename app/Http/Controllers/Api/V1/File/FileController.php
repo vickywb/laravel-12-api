@@ -13,26 +13,28 @@ use App\Repository\FileRepository;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FileStoreRequest;
+use App\Services\UploadFileService;
 
 class FileController extends Controller
 {
-    private $fileRepository;
+    private $uploadFileService;
 
-    public function __construct(FileRepository $fileRepository) {
-        $this->fileRepository = $fileRepository;
+    public function __construct(
+        UploadFileService $uploadFileService
+) {
+        $this->uploadFileService = $uploadFileService;
     }
 
     public function upload(FileStoreRequest $request, File $file)
     {
-        $dataFiles = [];
         $user = AuthHelper::getUserFromToken(request()->bearerToken());
 
-        $directory = $user?->role->slug === 'admin' ? 'product/' : 'profile/';
+        $directory = $user?->role->slug === 'admin' ? 'product' : 'profile';
 
         // // Check user only can upload 1 file
         if ((!$user || $user?->role->slug === 'user') && count($request->file('files')) > 1) {
             // Log
-            LoggerHelper::error('Failed to upload profile', [
+            LoggerHelper::error('Failed to upload profile, please upload only 1 file.', [
                 'email' => $user?->email,
                 'upload_at' => now()
             ]);
@@ -41,51 +43,22 @@ class FileController extends Controller
         }
 
         try {
-            DB::beginTransaction();
             
-            $files = $request->file('files');
-
-            foreach ($files as $file) {
-                FileHelper::uploadFile($file->get(), [
-                    'file_name' => 'name',
-                    'field_name' => 'directory',
-                    'extension' => $file->getClientOriginalExtension(),
-                    'directory' => $directory,
-                    'file_url' => 'file_url',
-                    'upload_at' => 'upload_at'
-                ], $request);
-
-                $fileData = $request->only(['name', 'directory', 'upload_at', 'file_url']);
-                $fileUploaded = $this->fileRepository->store($fileData);
-
-                $dataFiles[] = [
-                    'id' => $fileUploaded->id,
-                    'file_url' => $fileUploaded->file_url
-                ];
-            }
-
-            DB::commit();
-
-            // Log
-            LoggerHelper::info('File data successfully uploaded.', [
-                'action' => 'Store',
-                'model' => 'file',
-                'data' => $dataFiles
-            ]);
+            // Upload File Service
+            $fileUpload = $this->uploadFileService->handleUploadFiles($request, $directory);
 
         } catch (\Throwable $th) {
-            DB::rollBack();
-
-            // Log
-            LoggerHelper::error('Failed to upload file data.', [
+            LoggerHelper::error('Failed to upload file.', [
+                'email' => $user?->email,
+                'upload_at' => now(),
                 'error' => $th->getMessage()
             ]);
 
-            return ResponseApiHelper::error('An error occurred while processing your request for product data. Please try again later.');
+            return ResponseApiHelper::error('Failed to upload file, please try again later.');
         }
 
         return ResponseApiHelper::success('New File has been successfully uploaded.', [
-            'files' => $dataFiles
+            'files' => $fileUpload
         ]);
     }
 }
