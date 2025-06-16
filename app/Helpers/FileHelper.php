@@ -3,42 +3,28 @@
 namespace App\Helpers;
 
 use App\Models\File;
-use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class FileHelper
 {
-    public static function uploadFile($fileContent, array $params = [], $request) 
-    {    
-        // Determine file extension
-        $extension = ! empty($params['extension']) ? $params['extension'] : 'txt';
+    public static function uploadFileToStorage(UploadedFile $file, string $directory): array
+    {
+        // Create new name using uniqid + extension
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
 
-        // Generate Random Name
-        $fileName = Str::random(16);
+        // Store to storage
+        $path = $file->storeAs($directory, $filename, 'public');
 
-        // Define the path by which we will store the image
-        $directoryName = 'file' . '/' . $fileName . '.' . $extension;
+        $storagePath = $directory . '/' . $filename;
+
+        $url = asset('storage/' . $path);
         
-        // Generate DateTime
-        $upload_at = now();
-
-        if (isset($params['directory'])) {
-            $directoryName = 'file' . '/' . $params['directory'] . $fileName . '.' . $extension;
-        }
-
-        // File Url
-        $fileUrl = env('APP_URL') . 'storage/' . $directoryName;
-
-        // Store File in the public storage
-        Storage::put($directoryName,(string)$fileContent, 'public');
-
-        // Merge the file name column to request
-        $request->merge([
-            $params['field_name'] => $directoryName,
-            $params['file_name'] => $fileName,
-            $params['file_url'] => $fileUrl,
-            $params['upload_at'] => $upload_at
-        ]);
+        // Return URL and Directory
+        return [
+            'directory' => $storagePath,
+            'file_url' => $url
+        ];
     }
 
     public static function deleteUnusedFiles($unusedFileIds)
@@ -48,6 +34,7 @@ class FileHelper
             $file = File::find($unusedFileId);
 
             if ($file && Storage::exists($file->directory)) {
+                dd($file);
                 Storage::delete($file->directory);
             }
 
