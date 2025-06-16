@@ -205,7 +205,7 @@ class AuthController extends Controller
             $oldFileId = $user->userProfile()->pluck('file_id')->toArray();
             $newFileId = $data['file_id'];
 
-            $user->userProfile()->update([
+            $user->userProfile()->updateOrCreate([
                 'user_id' => $userId,
                 'phone_number' => $data['phone_number'],
                 'address' => $data['address'],
