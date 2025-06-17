@@ -26,21 +26,4 @@ class FileHelper
             'file_url' => $url
         ];
     }
-
-    public static function deleteUnusedFiles($unusedFileIds)
-    {
-        // Check if there are any unused file ids
-        foreach ($unusedFileIds as $unusedFileId) {
-            $file = File::find($unusedFileId);
-
-            if ($file && Storage::exists($file->directory)) {
-                dd($file);
-                Storage::delete($file->directory);
-            }
-
-            if ($file) {
-                $file->delete();
-            }
-        }
-    }
 }
