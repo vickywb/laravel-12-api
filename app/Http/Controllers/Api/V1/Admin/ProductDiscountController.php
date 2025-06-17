@@ -144,7 +144,7 @@ class ProductDiscountController extends Controller
 
             // Log
             LoggerHelper::info('Product discount deleted successfully.', [
-                'action' => 'destroy',
+                'action' => 'delete',
                 'model' => 'ProductDiscount',
                 'deleted_id' => $productDiscount->id
             ]);

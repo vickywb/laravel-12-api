@@ -89,8 +89,8 @@ class ProductController extends Controller
 
             // Log
             LoggerHelper::info('Product data successfully stored in the database.', [
-                'action' => 'Store',
-                'model' =>  'product',
+                'action' => 'store',
+                'model' =>  'Product',
                 'data' => $productData,
                 'file_data' => $productFiles
             ]);
@@ -100,7 +100,7 @@ class ProductController extends Controller
 
             // Log
             LoggerHelper::error('Failed to store product data in database.', [
-                'data' => $productData,
+                'request_data' => $productData,
                 'file_data' => $productFiles,
                 'error' => $th->getMessage()
             ]);
@@ -160,8 +160,8 @@ class ProductController extends Controller
 
             // Log
             LoggerHelper::info('Product data successfully updated in database.', [
-                'action' => 'Update',
-                'model' => 'product',
+                'action' => 'update',
+                'model' => 'Product',
                 'data' => $productData,
             ]);
 
@@ -170,7 +170,7 @@ class ProductController extends Controller
 
             // Log
             LoggerHelper::error('Failed to update product data in database.', [
-                'data' => $productData,
+                'request_data' => $productData,
                 'file_data' => $productFiles,
                 'error' => $th->getMessage()
             ]);
@@ -184,9 +184,9 @@ class ProductController extends Controller
             FileHelper::deleteUnusedFiles($unusedFileIds);
             // Log unused file ids
             LoggerHelper::info('Unused file id has been deleted.', [
-                'action' => 'Delete',
-                'model' => 'file',
-                'unused_file_ids' => $unusedFileIds
+                'action' => 'delete',
+                'model' => 'File',
+                'delete_file_id' => $unusedFileIds
             ]);
         }
 
