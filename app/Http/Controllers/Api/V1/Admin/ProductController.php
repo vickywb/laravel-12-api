@@ -19,18 +19,21 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Models\Category;
 use App\Models\File;
 use App\Repository\FileRepository;
+use App\Services\FileService;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    private $productRepository, $fileRepository;
+    private $productRepository, $fileRepository, $fileService;
 
     public function __construct(
         ProductRepository $productRepository,
-        FileRepository $fileRepository
+        FileRepository $fileRepository,
+        FileService $fileService
     ) {
         $this->productRepository = $productRepository;
         $this->fileRepository = $fileRepository;
+        $this->fileService = $fileService;
     }
 
     public function index()
@@ -181,7 +184,7 @@ class ProductController extends Controller
             
             // Check file_ids
             $unusedFileIds = array_diff($oldFileIds, $newFileIds);
-            FileHelper::deleteUnusedFiles($unusedFileIds);
+            $deleteFile = $this->fileService->deleteUnusedFiles($unusedFileIds);
             // Log unused file ids
             LoggerHelper::info('Unused file id has been deleted.', [
                 'action' => 'delete',
