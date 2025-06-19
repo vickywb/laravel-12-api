@@ -21,22 +21,26 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\File;
 use App\Repository\UserProfileRepository;
+use App\Services\FileService;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    private $userRepository, $fileRepository, $userProfileRepository;
+    private $userRepository, $fileRepository, 
+        $userProfileRepository, $fileService;
 
     public function __construct(
         UserRepository $userRepository,
         FileRepository $fileRepository,
-        UserProfileRepository $userProfileRepository
+        UserProfileRepository $userProfileRepository,
+        FileService $fileService
     ) 
     {
         $this->userRepository = $userRepository;
         $this->fileRepository = $fileRepository;
         $this->userProfileRepository = $userProfileRepository;
+        $this->fileService = $fileService;
     }
 
     public function register(RegisterRequest $request)
@@ -84,7 +88,7 @@ class AuthController extends Controller
 
             // Log
             LoggerHelper::info('User has been Successfully Registered.', [
-                'action' => 'Register',
+                'action' => 'register',
                 'model' => 'User',
                 'data' => [
                     'name' => $user->name,
@@ -98,6 +102,7 @@ class AuthController extends Controller
 
             // Log
             LoggerHelper::error('Failed Registration.' ,[
+                'request_data' => $userData,
                 'error' => $th->getMessage(),
             ]);
 
@@ -161,7 +166,7 @@ class AuthController extends Controller
 
             // Log
             LoggerHelper::info('User Successfully Logged Out, and Token was Revoked.', [
-                'action' => 'Logout',
+                'action' => 'logout',
                 'model' => 'PersonalAccessToken',
                 'token' => substr($token, 0, 5) . '...' . substr($token, -5)
             ]);
@@ -216,6 +221,8 @@ class AuthController extends Controller
 
             // Log
             LoggerHelper::info('User Profile successfully updated.', [
+                'action' => 'update',
+                'model' => 'UserProfile',
                 'data' => $data
             ]);
             
@@ -224,6 +231,7 @@ class AuthController extends Controller
 
             // Log
             LoggerHelper::error('Failed update profile.', [
+                'request_data' => $data,
                 'error' => $th->getMessage()
             ]);
 
@@ -232,13 +240,13 @@ class AuthController extends Controller
         } finally {
 
             $unusedFileId = array_diff($oldFileId, [$newFileId]);
-            FileHelper::deleteUnusedFiles($unusedFileId);
+            $deleteFile = $this->fileService->deleteUnusedFiles($unusedFileId);
 
             // Log unused file
             LoggerHelper::info('Unused file id has been deleted.', [
-                'action' => 'Delete',
-                'model' => 'file',
-                'unused_file_id' => $unusedFileId
+                'action' => 'delete',
+                'model' => 'File',
+                'deleted_file_id' => $unusedFileId
             ]);
         }
 

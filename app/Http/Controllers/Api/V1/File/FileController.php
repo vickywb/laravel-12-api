@@ -48,6 +48,8 @@ class FileController extends Controller
             $fileUpload = $this->uploadFileService->handleUploadFiles($request, $directory);
 
         } catch (\Throwable $th) {
+            
+            // Log
             LoggerHelper::error('Failed to upload file.', [
                 'email' => $user?->email,
                 'upload_at' => now(),
