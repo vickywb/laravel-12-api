@@ -21,10 +21,9 @@ class UploadFileService
     public function handleUploadFiles(Request $request, string $directory): array
     {
         $dataFiles = [];
-        
-        DB::beginTransaction();
             
         try {
+            DB::beginTransaction();
 
             $files = $request->file('files');
 
