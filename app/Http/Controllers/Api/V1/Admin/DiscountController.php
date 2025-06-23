@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Repository\DiscountRepository;
 use App\Http\Requests\DiscountStoreRequest;
 use App\Http\Requests\DiscountUpdateRequest;
+use App\Http\Resources\DiscountResource;
 
 class DiscountController extends Controller
 {
@@ -35,7 +36,7 @@ class DiscountController extends Controller
             'page' => 5,
         ]);
 
-        return ResponseApiHelper::success('Discounts retrieved successfully.', $discounts);
+        return ResponseApiHelper::success('Discounts retrieved successfully.', DiscountResource::collection($discounts));
     }
 
     public function store(DiscountStoreRequest $request)
