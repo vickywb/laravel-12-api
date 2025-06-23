@@ -42,7 +42,8 @@ class ProductController extends Controller
             'search' => [
                 'name' => request()->name,
                 'category_name' => request()->category_name
-            ]
+            ],
+            'page' => 5
         ]);
 
         // Message for reponse
