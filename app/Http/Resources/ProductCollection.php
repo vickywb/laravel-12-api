@@ -15,21 +15,8 @@ class ProductCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        $products = $this->collection->transform(function ($product){
-         
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'slug'  => $product->slug,
-                'price' => $product->price,
-                'stock' => $product->stock,
-                'description' => $product->description,
-                'product_url' => $product->product_url,
-                'category' => new CategoryResource($product->category),
-                'product_file' => new FileResource($product->productFile ?? null)
-            ];
-        });
-
-        return $products->toArray();
+        return [
+            'data' => ProductResource::collection($this->collection)
+        ];
     }
 }

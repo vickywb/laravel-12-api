@@ -14,26 +14,8 @@ class RoleCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        $roles = $this->collection->transform(function ($role) {
-            return [
-                'id' => $role->id,
-                'name' => $role->name,
-                'slug' => $role->slug,
-                'meta' => [
-                    'current_page' => $this->currentPage(),
-                    'total' => $this->total(),
-                    'per_page' => $this->perPage(),
-                    'last_page' => $this->lastPage(),
-                ],
-                'links' => [
-                    'first' => $this->url(1),
-                    'last' => $this->url($this->lastPage()),
-                    'prev' => $this->previousPageUrl(),
-                    'next' => $this->nextPageUrl(),
-                ]
-            ];
-        });
-
-        return $roles->toArray();
+        return [
+            'data' => RoleResource::collection($this->collection)
+        ];
     }
 }
