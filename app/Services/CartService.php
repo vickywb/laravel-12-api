@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\CartHelper;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Helpers\LoggerHelper;
@@ -15,7 +16,13 @@ class CartService
         // Search active product discount on product
         $product = Product::with('activeDiscount')->findOrFail($productId);
 
-        if ($quantity > $product->stock) {
+        // Check product exists on cart using helper
+        $cart = CartHelper::getLockedCart($userId, $productId);
+
+        // Check quantity in cart
+        $totalQuantity = ($cart ? $cart->quantity : 0) + $quantity;
+
+        if ($totalQuantity > $product->stock) {
             throw new \RuntimeException('Quantity exceeds available stock.');
         }
 
@@ -24,12 +31,6 @@ class CartService
 
         try {
             DB::beginTransaction();
-
-            // Check product exists on cart
-            $cart = Cart::where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->lockForUpdate()
-                ->first();
 
             if ($cart) {
                 // if product already exists in cart, update the quantity
@@ -70,6 +71,8 @@ class CartService
 
     public function decreaseItem(int $userId, int $quantity, Cart $cart): ?Cart
     {
+        $cart = CartHelper::getLockedCartById(['product'], $cart->id);
+
         try {
             DB::beginTransaction();
 
@@ -83,21 +86,30 @@ class CartService
             if ($newQuantity <= 0) {
                 // if quantity <= 0 delete item on cart
                 $cart->delete();
-                return null;
-            }
+                // Log
+                LoggerHelper::info('Cart item successfully deleted.', [
+                    'user_id' => $userId,
+                    'product_id' => $cart->product_id,
+                ]);
 
-            $cart->update(['quantity' => $newQuantity]);
+                $result = null;
+
+            } else {
+
+                $cart->update(['quantity' => $newQuantity]);
+                // Log
+                LoggerHelper::info('Cart item successfully decreased.', [
+                    'user_id' => $userId,
+                    'product_id' => $cart->product_id,
+                    'quantity' => (int)$newQuantity,
+                ]);
+                
+                $result = $cart->fresh(['product']);
+            }
 
             DB::commit();
 
-            // Log
-            LoggerHelper::info('Cart item successfully decreased.', [
-                'user_id' => $userId,
-                'product_id' => $cart->product_id,
-                'quantity' => (int)$newQuantity,
-            ]);
-
-            return $cart->fresh(['product']);
+            return $result;
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -114,6 +126,8 @@ class CartService
 
     public function replaceItem(int $userId, int $quantity, Cart $cart): ?Cart
     {
+        $cart = CartHelper::getLockedCartById(['product'], $cart->id);
+        
         try {
             DB::beginTransaction();
                 
@@ -124,21 +138,28 @@ class CartService
             if ($quantity <= 0) {
                 // if quantity <= 0 delete item on cart
                 $cart->delete();
-                return null;
-            }
+                // Log
+                LoggerHelper::info('Cart item successfully deleted.', [
+                    'user_id' => $userId,
+                    'product_id' => $cart->product_id,
+                ]);
+                $result = null;
+            } else {
+                
+                $cart->update(['quantity' => $quantity]);
+                // Log
+                LoggerHelper::info('Cart item successfully replaced.', [
+                    'user_id' => $userId,
+                    'product_id' => $cart->product_id,
+                    'quantity' => (int)$quantity,
+                ]);
 
-            $cart->update(['quantity' => $quantity]);
+                $result = $cart->fresh(['product']);
+            }
 
             DB::commit();
 
-            // Log
-            LoggerHelper::info('Cart item successfully replaced.', [
-                'user_id' => $userId,
-                'product_id' => $cart->product_id,
-                'quantity' => (int)$quantity,
-            ]);
-
-            return $cart->fresh(['product']);
+            return $result;
 
         } catch (\Throwable $th) {
             DB::rollBack();
