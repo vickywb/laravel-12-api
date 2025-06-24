@@ -23,7 +23,7 @@ class CartResource extends JsonResource
                 'name' => $this->product->name,
                 'price' => (string) $this->product->price,
                 'product_file' => new FileResource($this->product->productFile ?? null),
-                'product_discuont' => new ProductDiscountResource($this->product->activeDiscount ?? null)
+                'product_discount' => new ProductDiscountResource($this->product->activeDiscount ?? null)
             ]
         ];
     }
