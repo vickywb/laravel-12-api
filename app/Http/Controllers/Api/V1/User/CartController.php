@@ -71,7 +71,7 @@ class CartController extends Controller
             return ResponseApiHelper::error('Failed to decrease product on cart.', [], 500);
         }
 
-        return ResponseApiHelper::success('Product on cart successfully decreased.', new CartResource($cart));
+        return ResponseApiHelper::success($cart ? 'Product on cart successfully decreased' : 'Product on cart successfully deleted.', $cart ? new CartResource($cart) : null);
     }
 
     public function replace(CartReplaceRequest $request, Cart $cart)
@@ -87,7 +87,7 @@ class CartController extends Controller
             return ResponseApiHelper::error('Failed to replace product on cart.', [], 500);
         }
 
-        return ResponseApiHelper::success('Product on cart successfully replaced.', new CartResource($cart));
+        return ResponseApiHelper::success($cart ? 'Product on cart successfully replaced.' : 'Product on cart successfully deleted.', $cart ? new CartResource($cart) : null);
     }
 
     public function remove(Request $request, Cart $cart)
