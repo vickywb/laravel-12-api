@@ -18,6 +18,8 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'order_status' => $this->order_status,
             'total_price' => $this->total_price,
+            'created_at' => $this?->created_at->format('d-m-Y H:i:s'),
+            'update_at' => $this?->updated_at->format('d-m-Y H:i:s'),
             'order_details' => OrderDetailResource::collection($this->orderDetails)
         ];
     }
