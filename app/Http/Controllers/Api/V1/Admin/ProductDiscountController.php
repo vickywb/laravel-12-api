@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Repository\ProductDiscountRepository;
 use App\Http\Requests\ProductDiscountStoreRequest;
 use App\Http\Requests\ProductDiscountUpdateRequest;
+use App\Http\Resources\ProductDiscountResource;
 
 class ProductDiscountController extends Controller
 {
@@ -31,7 +32,7 @@ class ProductDiscountController extends Controller
             'page' => 5,
         ]);
 
-        return ResponseApiHelper::success('Product discounts retrieved successfully.', $productDiscounts);
+        return ResponseApiHelper::success('Product discounts retrieved successfully.', ProductDiscountResource::collection($productDiscounts));
     }
 
     public function store(ProductDiscountStoreRequest $request)
@@ -77,7 +78,7 @@ class ProductDiscountController extends Controller
             return ResponseApiHelper::error('An error occurred while processing store product discount data. Please try again later.');
         }
 
-        return ResponseApiHelper::success('Product discount successfully created.');
+        return ResponseApiHelper::success('Product discount successfully created.', new ProductDiscountResource($productDiscount));
     }
 
     public function update(ProductDiscountUpdateRequest $request, ProductDiscount $productDiscount)
@@ -123,7 +124,7 @@ class ProductDiscountController extends Controller
             return ResponseApiHelper::error('An error occurred while processing update product discount data. Please try again later.');
         }
 
-        return ResponseApiHelper::success('Product discount has been successfully updated.');
+        return ResponseApiHelper::success('Product discount has been successfully updated.', new ProductDiscountResource($productDiscount));
     }
 
     public function destroy(ProductDiscount $productDiscount)
