@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaction_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('product_name');
+            $table->string('midtrans_transaction_id');
             $table->integer('quantity'); // Quantity of the product in the transaction
             $table->decimal('unit_price', 16, 2); // Price of the product at the time of transaction
             $table->decimal('total_price', 16, 2); // Total price for this product in the transaction
