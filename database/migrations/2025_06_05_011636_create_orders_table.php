@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('order_status')->default('pending')->index(); // Order status: pending, processing, completed, cancelled
-            $table->decimal('total_price', 16, 2); // Total amount for the order
+            $table->decimal('sub_total', 16, 2);
+            $table->decimal('final_price', 16, 2); // final price = (subtotal - discount amount)
+            $table->string('discount_code')->nullable();
+            $table->decimal('global_discount_amount')->default(0);
             $table->timestamps();
         });
     }

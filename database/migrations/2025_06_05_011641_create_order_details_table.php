@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('quantity')->default(1); // Quantity of the product in the order
             $table->decimal('unit_price', 16, 2); // Price of the product at the time of order
-            $table->timestamps();
+            $table->decimal('total_price', 16, 2); // (unit price - product discount amount)
+            $table->decimal('product_discount_amount', 16, 2)->default(0); // Specific product discount
         });
     }
 
