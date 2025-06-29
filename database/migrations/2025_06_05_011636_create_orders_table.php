@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('sub_total', 16, 2);
             $table->decimal('final_price', 16, 2); // final price = (subtotal - discount amount)
             $table->string('discount_code')->nullable();
+            $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
             $table->decimal('global_discount_amount')->default(0);
             $table->timestamps();
         });
