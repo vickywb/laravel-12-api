@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('unit_price', 16, 2); // Price of the product at the time of order
             $table->decimal('total_price', 16, 2); // (unit price - product discount amount)
             $table->decimal('product_discount_amount', 16, 2)->default(0); // Specific product discount
+            $table->timestamps();
         });
     }
 
