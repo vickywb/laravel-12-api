@@ -17,9 +17,13 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_status' => $this->order_status,
-            'total_price' => $this->total_price,
-            'created_at' => $this?->created_at->format('d-m-Y H:i:s'),
-            'update_at' => $this?->updated_at->format('d-m-Y H:i:s'),
+            'discount_code' => $this->discount_code ?? null,
+            'discount_type' => $this->discount_type ?? null,
+            'global_discount_amount' => $this->global_discount_amount ?? null,
+            'sub_total' => $this->sub_total,
+            'final_price' => $this->final_price,
+            'created_at' => $this->created_at->format('d-m-Y H:i:s'),
+            'update_at' => $this->updated_at->format('d-m-Y H:i:s'),
             'order_details' => OrderDetailResource::collection($this->orderDetails)
         ];
     }
