@@ -10,6 +10,7 @@ use App\Helpers\ResponseApiHelper;
 use Illuminate\Support\Facades\DB;
 use App\Repository\OrderRepository;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderStoreRequest;
 use App\Http\Resources\OrderResource;
 
 class OrderController extends Controller
@@ -38,12 +39,13 @@ class OrderController extends Controller
         return ResponseApiHelper::success('Order retrived successfully.', OrderResource::collection($orders));
     }
 
-    public function store(Request $request)
+    public function store(OrderStoreRequest $request)
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
 
         try {
 
+            // Order Serivce
             $order = $this->orderService->createOrderFromCart($user->id);
         
         } catch (\Throwable $th) {
