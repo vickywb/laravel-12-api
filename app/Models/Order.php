@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Order extends Model
 {
     protected $fillable = [
-        'user_id', 'order_status', 'total_price'
+        'user_id', 'order_status', 'total_price', 'sub_total', 'final_price',
+        'discount_code', 'discount_type', 'global_discount_amount'
     ];
 
     protected $casts = [
-        'total_price' => 'string'
+        'sub_total' => 'string',
+        'final_price' => 'string',
+        'global_discount_amount' => 'string'
     ];
 
     // Relationship
