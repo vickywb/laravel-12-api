@@ -2,17 +2,27 @@
 
 namespace App\Services;
 
-use App\Enums\OrderStatus;
-use App\Helpers\LoggerHelper;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\Discount;
+use App\Enums\OrderStatus;
 use App\Models\OrderDetail;
+use App\Helpers\LoggerHelper;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
+    private $globalDiscountService;
+
+    public function __construct(GlobalDiscountService $globalDiscountService) {
+        $this->globalDiscountService = $globalDiscountService;
+    }
+
     public function createOrderFromCart(int $userId): Order
     {
+        $code = request()->code;
+
+        // Check user cart
         $carts = Cart::with('product')
             ->where('user_id', $userId)
             ->lockForUpdate()
@@ -22,10 +32,29 @@ class OrderService
             throw new \RuntimeException('Cart is empty.');
         }
 
-        // Count total price
-        $totalPrice = $carts->sum(function ($cart) {
+        // sub total price
+        $subTotal = $carts->sum(function ($cart) {
             return bcmul($cart->quantity, $cart->price_at_time, 2);
         });
+
+        // Initial default
+        $discountAmount = 0;
+        $discountType = null;
+        $discountCode = null;
+        
+        // Check if code exists
+        if (!empty($code)) {
+            $globalDiscount = $this->globalDiscountService->getActiveGlobalDiscount($code);
+
+            if ($globalDiscount) {
+                $discountAmount = $this->globalDiscountService?->calculatedGlobalDiscount($subTotal, $globalDiscount);
+                $discountType = $globalDiscount?->discount_type;
+                $discountCode = $globalDiscount?->code;
+            }
+        }
+
+        // Finap price
+        $finalPrice = bcsub($subTotal, $discountAmount, 2);
 
         try {
             DB::beginTransaction();
@@ -34,7 +63,11 @@ class OrderService
             $order = Order::create([
                 'user_id' => $userId,
                 'order_status' => OrderStatus::PENDING->value,
-                'total_price' => $totalPrice
+                'discount_code' => $discountCode,
+                'global_discount_amount' => $discountAmount,
+                'discount_type' => $discountType,
+                'sub_total' => $subTotal,
+                'final_price' => $finalPrice
             ]);
 
             foreach ($carts as $cart) {
@@ -43,7 +76,9 @@ class OrderService
                     'order_id' => $order->id,
                     'product_id' => $cart->product_id,
                     'quantity' => $cart->quantity,
-                    'unit_price' => $cart->price_at_time
+                    'unit_price' => $cart->price_at_time, // Price after discount
+                    'total_price' => bcmul($cart->quantity, $cart->price_at_time, 2),
+                    'product_discount_amount' => bcsub($cart->product->price, $cart->price_at_time, 2)
                 ]);
             }
 
