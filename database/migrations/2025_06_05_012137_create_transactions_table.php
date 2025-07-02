@@ -20,6 +20,11 @@ return new class extends Migration
             $table->string('payment_method');
             $table->decimal('total_price', 16, 2);
             $table->string('payment_status')->default('unpaid')->index(); // unpaid, paid, refunded
+            $table->string('transaction_status')->nullable();
+            $table->string('fraud_status')->nullable();
+            $table->string('va_number')->nullable();
+            $table->string('bank')->nullable();
+            $table->string('midtrans_transaction_id')->nullable();
             $table->timestamp('paid_at')->nullable()->index(); // Nullable for unpaid transactions
             $table->timestamps();
         });
