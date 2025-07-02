@@ -14,6 +14,11 @@ class Transaction extends Model
         'payment_method',
         'total_price',
         'payment_status',
+        'transaction_status',
+        'fraud_status',
+        'va_number',
+        'bank',
+        'midtrans_transaction_id',
         'paid_at'
     ];
 

@@ -12,12 +12,15 @@ class TransactionDetail extends Model
         'product_id',
         'quantity',
         'unit_price',
-        'total_price'
+        'total_price',
+        'product_name',
+        'product_discount_amount'
     ];
 
     protected $casts = [
         'unit_price' => 'string',
-        'total_price' => 'string'
+        'total_price' => 'string',
+        'product_discount_amount' => 'string'
     ];
 
     // Relationship
