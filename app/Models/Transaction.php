@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
@@ -24,7 +25,8 @@ class Transaction extends Model
 
     protected $casts = [
         'paid_at' => 'datetime',
-        'total_price' => 'string'
+        'total_price' => 'string',
+        'payment_status' => PaymentStatus::class
     ];
 
     //Relatioship
