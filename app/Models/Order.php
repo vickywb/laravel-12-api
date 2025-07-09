@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,8 @@ class Order extends Model
     protected $casts = [
         'sub_total' => 'string',
         'final_price' => 'string',
-        'global_discount_amount' => 'string'
+        'global_discount_amount' => 'string',
+        'order_status' => OrderStatus::class
     ];
 
     // Relationship
