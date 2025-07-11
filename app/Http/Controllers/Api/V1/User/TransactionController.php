@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\User;
 
+use App\Enums\PaymentStatus;
 use Midtrans\Snap;
 use Midtrans\Config;
 use App\Models\Order;
@@ -53,12 +54,7 @@ class TransactionController extends Controller
                 'invoice_number' => $invoiceNumber,
                 'payment_method' => 'midtrans',
                 'total_price' => $totalPrice,
-                'payment_status' => 'unpaid', // awalnya unpaid
-                // 'transaction_status' => $snapResponse['transaction_status'] ?? null,
-                // 'fraud_status' => $snapResponse['fraud_status'] ?? null,
-                // 'va_number' => $snapResponse['va_numbers'][0]['va_number'] ?? null,
-                // 'bank' => $snapResponse['va_numbers'][0]['bank'] ?? null,
-                // 'midtrans_transaction_id' => $snapResponse['transaction_id'] ?? null,
+                'payment_status' => PaymentStatus::UNPAID
             ]);
 
             foreach ($order->orderDetails as $transactionDetail) {
@@ -73,44 +69,54 @@ class TransactionController extends Controller
                 ]);
             }
 
+            // Prepare item detail for midtrans data
             $itemDetails = [];
-
-            $totalFromItems = 0;
+            $totalBeforeDiscount = 0;
 
             foreach ($order->orderDetails as $item) {
-                $totalPrice = (int) $item->total_price; // not an unit_price
+                if (!$item->product) {
+                    continue;
+                }
 
                 $itemDetails[] = [
                     'id'       => 'SKU-' . $item->product_id,
-                    'price'    => $totalPrice / $item->quantity, // average per item
+                    'price'    => (int) $item->unit_price,
                     'quantity' => $item->quantity,
                     'name'     => $item->product->name,
                 ];
-                // Calculate total price from items
-                $totalFromItems += $totalPrice;
+
+                $totalBeforeDiscount += $item->unit_price * $item->quantity;
+            }
+
+            // add discount global (if exists)
+            $discountAmount = $totalBeforeDiscount - $order->final_price;
+            if ($discountAmount > 0) {
+                $itemDetails[] = [
+                    'id'       => $item->order->discount_code ?? 'GLB-DISCOUNT',
+                    'price'    => -(int) $discountAmount,
+                    'quantity' => 1,
+                    'name'     => 'Global Discount',
+                ];
             }
 
             $payload = [
                 'transaction_details' => [
                     'order_id' => $orderId,
-                    'gross_amount' => (int) $totalFromItems,
+                    'gross_amount' => (int) $order->final_price,
                 ],
                 'customer_details' => [
                     'first_name' => $order->user->name,
                     'email' => $order->user->email,
                 ],
                 'item_details' => $itemDetails,
-                'enabled_payments' => ['gopay', 'bank_transfer', 'shopee_pay', 'credit_card'],
-                'vtweb' => [],
+                'enabled_payments' => ['gopay', 'bank_transfer', 'shopee_pay', 'qris', 'ewallet'],
             ];
 
             $snapToken = $this->midtrans->createSnapTransaction($payload);
-            // $invoiceUrl = Snap::getSnapUrl($snapToken);
-            // $invoiceUrl = "https://app.midtrans.com/snap/v2/vtweb/{$snapToken}"; // manual URL construction
+            $invoiceUrl = $snapToken['redirect_url'] ?? null;
 
             $transaction->update([
-                // 'invoice_url' => $invoiceUrl,
-                'invoice_url' => 'https://app.sandbox.midtrans.com/snap/v2/transactions/' . $snapToken,
+                'invoice_url' => $invoiceUrl
             ]);
 
             DB::commit();
@@ -132,13 +138,9 @@ class TransactionController extends Controller
 
         return ResponseApiHelper::success('Transaction data stored successfully.', [
             'transaction' => $transaction,
-            'order' => $order,
-            'snap_token' => $snapToken
+            'payload' => $payload,
+            'invoice_url' => $invoiceUrl,
+            'snap_token' => $snapToken['token'] ?? null
         ]);
-    }
-
-    public function show(string $id)
-    {
-        //
     }
 }
