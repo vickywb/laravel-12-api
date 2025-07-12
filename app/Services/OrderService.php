@@ -8,6 +8,8 @@ use App\Models\Discount;
 use App\Enums\OrderStatus;
 use App\Models\OrderDetail;
 use App\Helpers\LoggerHelper;
+use App\Helpers\ResponseApiHelper;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -29,10 +31,10 @@ class OrderService
             ->get();
 
         if ($carts->isEmpty()) {
-            throw new \RuntimeException('Cart is empty.');
+           return ResponseApiHelper::error('Cart is empty.', [], 400);
         }
 
-        // sub total price
+        // Sub total price
         $subTotal = $carts->sum(function ($cart) {
             return bcmul($cart->quantity, $cart->price_at_time, 2);
         });
@@ -41,7 +43,7 @@ class OrderService
         $discountAmount = 0;
         $discountType = null;
         $discountCode = null;
-        
+
         // Check if code exists
         if (!empty($code)) {
             $globalDiscount = $this->globalDiscountService->getActiveGlobalDiscount($code);
@@ -51,9 +53,13 @@ class OrderService
                 $discountType = $globalDiscount?->discount_type;
                 $discountCode = $globalDiscount?->code;
             }
+
+            if (!$globalDiscount) {
+                return ResponseApiHelper::error('Invalid discount code.', [], 400);
+            }
         }
 
-        // Finap price
+        // Final price
         $finalPrice = bcsub($subTotal, $discountAmount, 2);
 
         try {
