@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Product;
 use App\Helpers\LoggerHelper;
 use App\Helpers\ProductDiscountHelper;
+use App\Helpers\ResponseApiHelper;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -23,7 +24,7 @@ class CartService
         $totalQuantity = ($cart ? $cart->quantity : 0) + $quantity;
 
         if ($totalQuantity > $product->stock) {
-            throw new \RuntimeException('Quantity exceeds available stock.');
+            return ResponseApiHelper::error('Quantity exceeds available stock.');
         }
 
         // Product Price
@@ -77,7 +78,7 @@ class CartService
             DB::beginTransaction();
 
             if ($quantity > $cart->quantity) {
-                throw new \RuntimeException('Cannot decrease more than current quantity.');
+                return ResponseApiHelper::error('Cannot decrease more than current quantity.');
             }
 
             // Decrease the current quantity
@@ -132,7 +133,7 @@ class CartService
             DB::beginTransaction();
                 
             if ($quantity > $cart->product->stock) {
-                throw new \RuntimeException('Quantity exceeds available stock.');
+                return ResponseApiHelper::error('Quantity exceeds available stock.');
             }
             
             if ($quantity <= 0) {
