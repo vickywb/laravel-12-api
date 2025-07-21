@@ -1,9 +1,11 @@
 <?php
 
-use App\Http\Middleware\AdminApiMiddleware;
-use App\Http\Middleware\ApiRateLimitMiddleware;
+use App\Exceptions\ApiException;
+use App\Helpers\ResponseApiHelper;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\AuthApiMiddleware;
+use App\Http\Middleware\AdminApiMiddleware;
+use App\Http\Middleware\ApiRateLimitMiddleware;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -27,5 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (ApiException $e, $request) {
+            return ResponseApiHelper::error(
+                $e->getMessage(),
+                [],
+                $e->getCode() ?: 400
+            );
+        });
+
+        $exceptions->dontReport(ApiException::class);
     })->create();
