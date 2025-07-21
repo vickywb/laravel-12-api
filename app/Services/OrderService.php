@@ -8,8 +8,9 @@ use App\Models\Discount;
 use App\Enums\OrderStatus;
 use App\Models\OrderDetail;
 use App\Helpers\LoggerHelper;
-use App\Helpers\ResponseApiHelper;
 use GuzzleHttp\Psr7\Response;
+use App\Exceptions\ApiException;
+use App\Helpers\ResponseApiHelper;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -31,7 +32,7 @@ class OrderService
             ->get();
 
         if ($carts->isEmpty()) {
-           return ResponseApiHelper::error('Cart is empty.', [], 400);
+           throw new ApiException('Your cart is empty. Please add products to your cart before placing an order.');
         }
 
         // Sub total price
@@ -48,15 +49,13 @@ class OrderService
         if (!empty($code)) {
             $globalDiscount = $this->globalDiscountService->getActiveGlobalDiscount($code);
 
-            if ($globalDiscount) {
-                $discountAmount = $this->globalDiscountService?->calculatedGlobalDiscount($subTotal, $globalDiscount);
-                $discountType = $globalDiscount?->discount_type;
-                $discountCode = $globalDiscount?->code;
+            if (!$globalDiscount) {
+                throw new ApiException('Invalid discount code.', 400);
             }
 
-            if (!$globalDiscount) {
-                return ResponseApiHelper::error('Invalid discount code.', [], 400);
-            }
+            $discountAmount = $this->globalDiscountService?->calculatedGlobalDiscount($subTotal, $globalDiscount);
+            $discountType = $globalDiscount?->discount_type;
+            $discountCode = $globalDiscount?->code;
         }
 
         // Final price
@@ -109,7 +108,7 @@ class OrderService
                 'error' => $th->getMessage()
             ]);
         
-            throw $th; 
+            throw new ApiException('Failed to create order. Please try again later.', 500); 
         }
     }
 }
