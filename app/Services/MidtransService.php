@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Helpers\LoggerHelper;
 use Midtrans\Config;
 use Illuminate\Support\Facades\Http;
@@ -47,12 +48,12 @@ class MidtransService
             return $response->json();
         }
 
-        // Log jika terjadi error
+        // Log
         LoggerHelper::error('Midtrans Snap API Error', [
             'status' => $response->status(),
             'body' => $response->body(),
         ]);
 
-        throw new \Exception('Failed to create Midtrans Snap transaction.');
+        throw new ApiException('Failed to create Midtrans Snap transaction.');
     }
 }

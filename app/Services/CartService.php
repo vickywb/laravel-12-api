@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Helpers\CartHelper;
 use App\Models\Cart;
 use App\Models\Product;
@@ -24,7 +25,7 @@ class CartService
         $totalQuantity = ($cart ? $cart->quantity : 0) + $quantity;
 
         if ($totalQuantity > $product->stock) {
-            return ResponseApiHelper::error('Quantity exceeds available stock.');
+            throw new ApiException('Quantity exceeds available stock.');
         }
 
         // Product Price
@@ -66,7 +67,7 @@ class CartService
                 'error' => $th->getMessage(),
             ]);
             
-            throw $th;
+            throw new ApiException('Failed to add item on cart');
         }
     }
 
@@ -78,7 +79,7 @@ class CartService
             DB::beginTransaction();
 
             if ($quantity > $cart->quantity) {
-                return ResponseApiHelper::error('Cannot decrease more than current quantity.');
+                throw new ApiException('Cannot decrease more than current quantity.');
             }
 
             // Decrease the current quantity
@@ -121,7 +122,7 @@ class CartService
                 'error' => $th->getMessage(),
             ]);
             
-            throw $th;
+            throw new ApiException('Failed to decrease item on cart');
         }
     }
 
@@ -133,7 +134,7 @@ class CartService
             DB::beginTransaction();
                 
             if ($quantity > $cart->product->stock) {
-                return ResponseApiHelper::error('Quantity exceeds available stock.');
+                throw new ApiException('Quantity exceeds available stock.');
             }
             
             if ($quantity <= 0) {
@@ -170,8 +171,8 @@ class CartService
                 'user_id' => $userId,
                 'error' => $th->getMessage(),
             ]);
-            
-            throw $th;
+
+            throw new ApiException('Failed to replace item on cart');
         }
     }
 
@@ -199,7 +200,7 @@ class CartService
                 'error' => $th->getMessage(),
             ]);
             
-            throw $th;
+            throw new ApiException('Failed to delete item on cart');
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Helpers\FileHelper;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -70,7 +71,7 @@ class UploadFileService
                 'error' => $th->getMessage()
             ]);
 
-            throw $th; // Rethrow the exception to be handled by the controller
+            throw new ApiException('Failed to upload file data.'); // Rethrow the exception to be handled by the controller
         }
     }
 }
