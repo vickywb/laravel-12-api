@@ -2,8 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\Order;
 use App\Models\User;
+use App\Models\Order;
+use App\Helpers\LoggerHelper;
 use Illuminate\Auth\Access\Response;
 
 class OrderPolicy
