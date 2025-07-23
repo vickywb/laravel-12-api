@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Midtrans;
 
+use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class MidtransWebhookController extends Controller
             return ResponseApiHelper::error('Transaction not found', [], 404);
         }
 
+        // Payment Status Enum
         $statusEnum = PaymentStatus::fromMidtrans($transactionStatus);
 
         try {
@@ -72,6 +74,12 @@ class MidtransWebhookController extends Controller
                 'payment_status' => $statusEnum,
                 'paid_at' => $statusEnum->isPaid() ? now() : null,
             ]);
+
+            if ($transaction->order && $statusEnum->isPaid()) {
+                $transaction->order->update([
+                    'order_status' => OrderStatus::PAID->value
+                ]);
+            }
 
             DB::commit();
             // Log
