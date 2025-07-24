@@ -26,7 +26,7 @@ class UserRepository
             return $user->paginate($params['page']);
         }
 
-        return $user;
+        return $user->get();
     }
 
     public function findByColumn($value, $column)
