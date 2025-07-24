@@ -15,6 +15,9 @@ class CartRepository
     public function get($params = [])
     {
         $carts = $this->cart
+            ->when(!empty($params['user_id']), function ($query) use ($params) {
+                return $query->where('user_id', $params['user_id']);
+            })
             ->when(!empty($params['with']), function ($query) use ($params) {
                 return $query->with($params['with']);
             });
