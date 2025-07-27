@@ -35,9 +35,11 @@ class CartController extends Controller
     {
         $user = AuthHelper::getUserFromToken(request()->bearerToken());
 
-        $carts = Cart::with(['product.activeDiscount'])
-            ->where('user_id', $user->id)
-            ->get();
+        $carts = $this->cartRepository->get([
+            'user_id' => $user->id,
+            'with' => ['product', 'product.activeDiscount'],
+            'page' => 10
+        ]);
         
         return ResponseApiHelper::success('Carts retrieved successfully.', CartResource::collection($carts));
     }
@@ -45,64 +47,40 @@ class CartController extends Controller
     public function add(CartStoreRequest $request)
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
-        
-        try {
-            // Cart Service
-            $cart = $this->cartService->addItem($user->id, $request->product_id, $request->quantity);
+    
+        // Cart Service
+        $addedCart = $this->cartService->addItem($user->id, $request->product_id, $request->quantity);
 
-        } catch (\Throwable $th) {
-
-            return ResponseApiHelper::error('Failed to add product on cart.', [], 500);
-        }
-
-        return ResponseApiHelper::success('Product on cart successfully added.', new CartResource($cart));
+        return ResponseApiHelper::success('Product on cart successfully added.', new CartResource($addedCart));
     }
 
     public function decrease(CartDecreaseRequest $request, Cart $cart)
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
         
-        try {
-            // Cart Service
-            $cart = $this->cartService->decreaseItem($user->id, $request->quantity, $cart);
+        // Cart Service
+        $decreasedCart = $this->cartService->decreaseItem($user->id, $request->quantity, $cart);
 
-        } catch (\Throwable $th) {
-
-            return ResponseApiHelper::error('Failed to decrease product on cart.', [], 500);
-        }
-
-        return ResponseApiHelper::success($cart ? 'Product on cart successfully decreased' : 'Product on cart successfully deleted.', $cart ? new CartResource($cart) : null);
+        return ResponseApiHelper::success($decreasedCart ? 'Product on cart successfully decreased' : 'Product on cart successfully deleted.', $decreasedCart ? new CartResource($decreasedCart) : null);
     }
 
     public function replace(CartReplaceRequest $request, Cart $cart)
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
         
-        try {
-            // Cart Service
-            $cart = $this->cartService->replaceItem($user->id,  $request->quantity, $cart);
+        // Cart Service
+        $replacedCart = $this->cartService->replaceItem($user->id,  $request->quantity, $cart);
 
-        } catch (\Throwable $th) {
-
-            return ResponseApiHelper::error('Failed to replace product on cart.', [], 500);
-        }
-
-        return ResponseApiHelper::success($cart ? 'Product on cart successfully replaced.' : 'Product on cart successfully deleted.', $cart ? new CartResource($cart) : null);
+        return ResponseApiHelper::success($replacedCart ? 'Product on cart successfully replaced.' : 'Product on cart successfully deleted.', $replacedCart ? new CartResource($replacedCart) : null);
     }
 
     public function remove(Request $request, Cart $cart)
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
         
-        try {
-            // Cart Service
-            $cart = $this->cartService->removeItem($user->id, $cart);
+        // Cart Service
+        $deletedCart = $this->cartService->removeItem($user->id, $cart);
 
-        } catch (\Throwable $th) {
-            
-            return ResponseApiHelper::error('Failed to remove cart.', [], 500);
-        }
-
-        return ResponseApiHelper::success('Product on cart successfully removed.');
+        return ResponseApiHelper::success('Product on cart successfully removed.' . ($deletedCart ? '' : ' Cart is empty now.'), $deletedCart ? new CartResource($deletedCart) : null);
     }
 }
