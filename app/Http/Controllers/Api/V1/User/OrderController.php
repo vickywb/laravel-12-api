@@ -10,12 +10,16 @@ use App\Helpers\ResponseApiHelper;
 use Illuminate\Support\Facades\DB;
 use App\Repository\OrderRepository;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\OrderStoreRequest;
 use App\Http\Resources\OrderResource;
+use App\Http\Requests\OrderStoreRequest;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class OrderController extends Controller
 {
     private $orderRepository, $orderService;
+
+    use AuthorizesRequests;
 
     public function __construct(
         OrderRepository $orderRepository,
@@ -28,8 +32,12 @@ class OrderController extends Controller
     
     public function index()
     {
+        $user = AuthHelper::getUserFromToken(request()->bearerToken());
+
         $orders = $this->orderRepository->get([
+            'user_id' => $user->id,
             'order' => 'created_at desc',
+            'with' => ['orderDetails.product'],
             'search' => [
                 'status' => request()->order_status
             ],
@@ -43,30 +51,23 @@ class OrderController extends Controller
     {
         $user = AuthHelper::getUserFromToken($request->bearerToken());
 
-        try {
-
-            // Order Serivce
-            $order = $this->orderService->createOrderFromCart($user->id);
-        
-        } catch (\Throwable $th) {
-
-            return ResponseApiHelper::error('An error occurred while proccess store order data. Please try again later.');
-        }
-
-        return ResponseApiHelper::success('Order has been created successfully.', new OrderResource($order));
+        // Order Service
+        $order = $this->orderService->createOrderFromCart($user->id);
+    
+        return ResponseApiHelper::success('Order has been created successfully.', new OrderResource($order), 201);
     }
 
     public function show(Order $order)
     {
+        $user = AuthHelper::getUserFromToken(request()->bearerToken());
+        auth()->loginUsingId($user->id); // convert to auth user from token
+        
+        try {
+            $this->authorize('view', $order);
+        } catch (AuthorizationException $e) {
+            return ResponseApiHelper::error('You do not have permission to view this order.', [], 403);
+        }
+        
         return ResponseApiHelper::success('Order retrived successfully.', new OrderResource($order));
-    }
-
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-    public function destroy(string $id)
-    {
-        //
     }
 }
