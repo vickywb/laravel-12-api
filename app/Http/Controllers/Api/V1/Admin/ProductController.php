@@ -112,7 +112,7 @@ class ProductController extends Controller
             return ResponseApiHelper::error('An error occurred while processing store product data. Please try again later.');
         }
 
-        return ResponseApiHelper::success('New Product successfully created.');
+        return ResponseApiHelper::success('New Product successfully created.', new ProductResource($product));
     }
 
     public function show(Product $product)
@@ -194,7 +194,7 @@ class ProductController extends Controller
             ]);
         }
 
-        return ResponseApiHelper::success('Product has been successfully updated.');
+        return ResponseApiHelper::success('Product has been successfully updated.', new ProductResource($product));
     }
 
     public function destroy(Product $product)
