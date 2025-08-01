@@ -27,7 +27,7 @@ class ProductController extends Controller
                 'name' => request()->name,
                 'category_name' => request()->category_name,
             ],
-            'page' => 5,
+            'page' => 10,
         ]);
 
         if ($products->isEmpty()) {

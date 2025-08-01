@@ -15,13 +15,19 @@ class ProductRepository
     public function get($params = [])
     {
         $products = $this->product
-         ->when(!empty($params['search']['name']), function ($query) use ($params) {
+            ->when(!empty($params['search']['name']), function ($query) use ($params) {
                  return $query->where('name', 'LIKE', '%' . $params['search']['name'] . '%');
+            })
+            ->when(!empty($params['order']), function ($query) use ($params) {
+                return $query->orderByRaw($params['order']);
             })
             ->when(!empty($params['search']['category_name']), function ($query) use ($params) {
                 return $query->whereHas('category', function ($query) use ($params) {
                  return $query->where('name', 'LIKE', '%' . $params['search']['category_name'] . '%');
                 });
+            })
+            ->when(!empty($params['with']), function ($query) use ($params) {
+                return $query->with($params['with']);
             });
 
         if (!empty($params['page'])) {
