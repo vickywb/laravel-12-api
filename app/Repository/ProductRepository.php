@@ -26,6 +26,9 @@ class ProductRepository
                  return $query->where('name', 'LIKE', '%' . $params['search']['category_name'] . '%');
                 });
             })
+            ->when(!empty($params['whereHas']), function ($query) use ($params) {
+                return $query->whereHas($params['whereHas']);
+            })
             ->when(!empty($params['with']), function ($query) use ($params) {
                 return $query->with($params['with']);
             });
