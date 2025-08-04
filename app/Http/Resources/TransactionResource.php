@@ -19,7 +19,7 @@ class TransactionResource extends JsonResource
             'invoice_number' => $this->invoice_number,
             'transaction_status' => $this->transaction_status,
             'payment_method' => $this->payment_method,
-            'total_price' => $this->total_price,
+            'total_price' => (string) $this->total_price,
             'bank' => $this->bank,
             'paid_at' => $this->paid_at ? $this->paid_at->format('Y-m-d H:i:s') : null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),

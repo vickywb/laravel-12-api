@@ -18,12 +18,14 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'price' => $this->price,
+            'price' => (string) $this->price,
+            'final_price' => (string) $this->final_price,
             'stock' => $this->stock,
             'description' => $this->description,
             'product_url' => $this->product_url,
             'category' => new CategoryResource($this->category),
             'product_file' => new FileResource($this->productFile ?? null),
+            'product_discount' => new ProductDiscountResource($this->activeDiscount ?? null)
         ];
     }
 }

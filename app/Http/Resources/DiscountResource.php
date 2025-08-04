@@ -18,8 +18,8 @@ class DiscountResource extends JsonResource
             'id' => $this->id,
             'code' => $this->code,
             'discount_type' => $this->discount_type,
-            'discount_amount' => $this->discount_amount,
-            'minimum_order_total' => $this->minimum_order_total,
+            'discount_amount' => (string) $this->discount_amount,
+            'minimum_order_total' => (string) $this->minimum_order_total,
             'start_at' => $this->start_at,
             'end_at' => $this->end_at
         ];

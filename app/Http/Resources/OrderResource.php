@@ -19,9 +19,9 @@ class OrderResource extends JsonResource
             'order_status' => $this->order_status,
             'discount_code' => $this->discount_code ?? null,
             'discount_type' => $this->discount_type ?? null,
-            'global_discount_amount' => $this->global_discount_amount ?? null,
-            'sub_total' => $this->sub_total,
-            'final_price' => $this->final_price,
+            'global_discount_amount' => (string) $this->global_discount_amount ?? null,
+            'sub_total' => (string) $this->sub_total,
+            'final_price' => (string) $this->final_price,
             'created_at' => $this->created_at->format('d-m-Y H:i:s'),
             'update_at' => $this->updated_at->format('d-m-Y H:i:s'),
             'order_details' => OrderDetailResource::collection($this->orderDetails)

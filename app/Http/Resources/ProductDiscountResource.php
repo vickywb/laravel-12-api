@@ -16,7 +16,8 @@ class ProductDiscountResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'discount_price' => $this->discount_price,
+            'discount_value' => (string) $this->discount_value,
+            'discount_type' => $this->discount_type,
             'start_at' => $this->start_at,
             'end_at' => $this->end_at
         ];
