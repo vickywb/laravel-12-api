@@ -17,6 +17,8 @@ return new class extends Migration
             $table->enum('discount_type', ['percentage', 'fixed'])->default('percentage');
             $table->decimal('discount_amount', 16, 2); // Value of the discount
             $table->decimal('minimum_order_total', 16, 2)->default(0); // Minimum order amount to apply the discount
+            $table->integer('usage_limit')->nullable(); // Limit on how many times the discount can be used
+            $table->boolean('is_active')->default(true); // Whether the discount is currently active
             $table->timestamp('start_at'); // Start date of the discount
             $table->timestamp('end_at'); // End date of the discount
             $table->timestamps();
