@@ -53,6 +53,10 @@ class OrderService
                 throw new ApiException('Invalid discount code.', 400);
             }
 
+            if (is_null($globalDiscount->usage_limit) || $globalDiscount->usage_limit <= 0) {
+                throw new ApiException('Discount code usage limit reached.', 400);
+            }
+
             $discountAmount = $this->globalDiscountService?->calculatedGlobalDiscount($subTotal, $globalDiscount);
             $discountType = $globalDiscount?->discount_type;
             $discountCode = $globalDiscount?->code;
