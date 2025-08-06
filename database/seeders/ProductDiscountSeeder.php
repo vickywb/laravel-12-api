@@ -16,31 +16,36 @@ class ProductDiscountSeeder extends Seeder
         $productDiscounts = [
             [
                 'product_id' => 5,
-                'discount_price' => 5000,
+                'discount_value' => 10,
+                'discount_type' => 'percentage',
                 'start_at' => now(),
                 'end_at' => now()->addDays(3)
             ],
             [
                 'product_id' => 4,
-                'discount_price' => 10000,
+                'discount_value' => 15000,
+                'discount_type' => 'fixed',
                 'start_at' => now(),
                 'end_at' => now()->addDays(3)
             ],
             [
                 'product_id' => 3,
-                'discount_price' => 15000,
+                'discount_value' => 20,
+                'discount_type' => 'percentage',
                 'start_at' => now(),
                 'end_at' => now()->addDays(3)
             ],
             [
                 'product_id' => 2,
-                'discount_price' => 25000,
+                'discount_value' => 15,
+                'discount_type' => 'percentage',
                 'start_at' => now(),
                 'end_at' => now()->addDays(3)
             ],
             [
                 'product_id' => 1,
-                'discount_price' => 50000,
+                'discount_value' => 50000,
+                'discount_type' => 'fixed',
                 'start_at' => now(),
                 'end_at' => now()->addDays(3)
             ]
