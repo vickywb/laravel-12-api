@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ApiException;
 use App\Models\Discount;
 
 class GlobalDiscountService
@@ -12,6 +13,13 @@ class GlobalDiscountService
         return Discount::where('code', $code)
             ->where('start_at', '<=', now())
             ->where('end_at', '>=', now())
+            ->where('is_active', true)
+            ->when('usage_limit', function ($query) {
+                $query->where(function ($query) {
+                    $query->whereNull('usage_limit')
+                        ->orWhere('usage_limit', '>', 0);
+                });
+            })
             ->first();
     }
 
@@ -19,7 +27,7 @@ class GlobalDiscountService
     {
         // Return 0 if subtotal does not meet the minimum order total
         if ($subTotal < $discount->minimum_order_total) {
-            return 0;
+            throw new ApiException('Subtotal does not meet the minimum order total for this discount.', 400);
         }
 
         // Calculate based on discount type: percentage or fixed
