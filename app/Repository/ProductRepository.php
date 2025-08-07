@@ -21,6 +21,9 @@ class ProductRepository
             ->when(!empty($params['order']), function ($query) use ($params) {
                 return $query->orderByRaw($params['order']);
             })
+              ->when(!empty($params['order_desc']), function ($query) use ($params) {
+                return $query->orderByDesc($params['order_desc']);
+            })
             ->when(!empty($params['search']['category_name']), function ($query) use ($params) {
                 return $query->whereHas('category', function ($query) use ($params) {
                  return $query->where('name', 'LIKE', '%' . $params['search']['category_name'] . '%');
