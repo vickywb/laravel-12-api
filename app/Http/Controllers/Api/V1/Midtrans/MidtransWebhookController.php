@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1\Midtrans;
 
+use App\Events\OrderPaid;
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Transaction;
+use App\Enums\PaymentStatus;
 use Illuminate\Http\Request;
 use App\Helpers\LoggerHelper;
 use App\Helpers\ResponseApiHelper;
@@ -79,6 +80,9 @@ class MidtransWebhookController extends Controller
                 $transaction->order->update([
                     'order_status' => OrderStatus::PAID->value
                 ]);
+                
+                // Trigger event
+                event(new OrderPaid($transaction->order));
             }
 
             DB::commit();
