@@ -25,7 +25,7 @@ class ProductUpdateRequest extends FormRequest
             'name' => 'required|string|max:50|unique:products,name,' . $this->product->id,
             'price' => 'required|numeric',
             'stock' => 'required|integer|min:1',
-            'description' => 'required|string|max:255',
+            'description' => 'required|string|max:500',
             'category_id' => 'required',
         ];
     }
