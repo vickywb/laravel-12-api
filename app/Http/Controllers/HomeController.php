@@ -20,23 +20,16 @@ class HomeController extends Controller
     public function index()
     {
         $newProducts = $this->productRepository->get([
-            'order' => 'created_at desc',
+            'order' => 'CASE WHEN EXISTS (
+                SELECT 1 FROM product_discounts 
+                WHERE product_discounts.product_id = products.id 
+                AND start_at <= NOW() AND end_at >= NOW() AND is_active = 1) 
+                THEN 0 ELSE 1 END',
+            'order_desc' => 'created_at',
+            'with' => 'activeDiscount',
             'page' => 8
         ]);
 
-        $discountProducts = $this->productRepository->get([
-            'whereHas' => 'activeDiscount',
-            'with' => 'activeDiscount'
-        ]);
-
-        return ResponseApiHelper::success('Successfully Retrived Data.', [
-            'new_products' => ProductResource::collection($newProducts),
-            'discount_products' => ProductResource::collection($discountProducts)
-        ]);
-    }
-
-    public function show(string $id)
-    {
-        //
+        return ResponseApiHelper::success('Successfully Retrived Data.', ProductResource::collection($newProducts));
     }
 }
