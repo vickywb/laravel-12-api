@@ -9,7 +9,9 @@ class ProductDiscount extends Model
 {
     protected $fillable = [
         'product_id',
-        'discount_price',
+        'discount_value',
+        'discount_type',
+        'is_active',
         'start_at',
         'end_at',
     ];
