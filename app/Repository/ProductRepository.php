@@ -16,7 +16,6 @@ class ProductRepository
 
     public function get($params = [])
     {
-        $ttl =
         $cacheKey = $this->generateCacheKey($params);
 
         return Cache::tags(['products'])->remember($cacheKey, $this->cacheTTL, function () use ($params) {
@@ -40,8 +39,7 @@ class ProductRepository
                 })
                 ->when(!empty($params['with']), function ($query) use ($params) {
                     return $query->with($params['with']);
-                })
-                ->pluck('id');
+                });
 
             if (!empty($params['page'])) {
                 return $products->paginate($params['page']);
