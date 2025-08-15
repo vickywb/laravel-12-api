@@ -87,7 +87,8 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return ResponseApiHelper::success('Category retrived successfully.', new CategoryResource($category));
+        $category = $this->categoryRepository->find($category->id);
+        return ResponseApiHelper::success('Category retrieved successfully.', new CategoryResource($category));
     }
 
     public function update(CategoryUpdateRequest $request, Category $category)
@@ -104,7 +105,7 @@ class CategoryController extends Controller
             DB::beginTransaction();
 
             $category = $category->fill($data);
-            $category = $this->categoryRepository->store($category);
+            $category = $this->categoryRepository->update($category);
 
             DB::commit();
 
@@ -146,8 +147,8 @@ class CategoryController extends Controller
 
         try {
             DB::beginTransaction();
-            
-            $category->delete();
+
+            $category = $this->categoryRepository->delete($category);
 
             DB::commit();
 
