@@ -7,6 +7,7 @@ use App\Models\Discount;
 class DiscountRepository
 {
     protected $discount;
+    private $cacheKey = 'discounts';
 
     public function __construct(Discount $discount)
     {
@@ -15,11 +16,14 @@ class DiscountRepository
 
     public function get($params = [])
     {
-        $discounts = $this->discount
-            ->when(!empty($params['search']['code']), function ($query) use ($params) {
-                return $query->where('code', 'LIKE', '%' . $params['search']['code'] . '%');
-            })
-            ->when(!empty($params['search']['active']), function ($query) use ($params) {
+        $cacheKey = $this->generateCacheKey($params);
+
+        Cache::tags(['discounts'])->rememberForever($cacheKey, function () use ($params) {
+            return $this->discount
+                ->when(!empty($params['search']['code']), function ($query) use ($params) {
+                    return $query->where('code', 'LIKE', '%' . $params['search']['code'] . '%');
+                })
+                ->when(!empty($params['search']['active']), function ($query) use ($params) {
                 return $query->where('start_at', '<=', now())->where('end_at', '>=', now());
             })
             ->when(!empty($params['search']['expired']), function ($query) use ($params) {
@@ -34,12 +38,44 @@ class DiscountRepository
         }
 
         return $discounts->get();
+        });
+    }
+
+    public function find($id)
+    {
+        return Cache::tags(['discounts'])->rememberForever("discount_{$id}", function () use ($id) {
+            return $this->discount->find($id);
+        });
     }
 
     public function store(Discount $discount)
     {
         $discount->save();
-
+        $this->clearCache();
         return $discount;
+    }
+
+    public function update(Discount $discount)
+    {
+        $discount->update();
+        $this->clearCache();
+        return $discount;
+    }
+
+    public function delete(Discount $discount)
+    {
+        $discount->delete();
+        $this->clearCache();
+        return $discount;
+    }
+
+    private function generateCacheKey(array $params)
+    {
+        return $this->cacheKey . '_' . md5(json_encode($params));
+    }
+
+    public function clearCache()
+    {
+        Cache::forget($this->cacheKey);
     }
 }
