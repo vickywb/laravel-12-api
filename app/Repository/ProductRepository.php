@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class ProductRepository
 {
     private $product;
-    private $cacheTTL = 1800;
+    private $cacheTTL = 1800; // 30 minutes
 
     public function __construct(Product $product) {
         $this->product = $product;
