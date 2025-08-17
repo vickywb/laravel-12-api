@@ -104,7 +104,7 @@ class RoleController extends Controller
             DB::beginTransaction();
 
             $role = $role->fill($data);
-            $role = $this->roleRepository->store($role);
+            $role = $this->roleRepository->update($role);
 
             DB::commit();
 
@@ -147,7 +147,7 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            $role->delete();
+            $role = $this->roleRepository->destroy($role);
 
             DB::commit();
 
