@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Models\Discount;
+use Illuminate\Support\Facades\Cache;
 
 class DiscountRepository
 {
@@ -18,8 +19,8 @@ class DiscountRepository
     {
         $cacheKey = $this->generateCacheKey($params);
 
-        Cache::tags(['discounts'])->rememberForever($cacheKey, function () use ($params) {
-            return $this->discount
+        return Cache::tags(['discounts'])->rememberForever($cacheKey, function () use ($params) {
+            $discounts = $this->discount
                 ->when(!empty($params['search']['code']), function ($query) use ($params) {
                     return $query->where('code', 'LIKE', '%' . $params['search']['code'] . '%');
                 })
@@ -33,11 +34,11 @@ class DiscountRepository
                 return $query->where('start_at', '>', now());
             });
 
-        if (!empty($params['page'])) {
-            return $discounts->paginate($params['page']);
-        }
+            if (!empty($params['page'])) {
+                return $discounts->paginate($params['page']);
+            }
 
-        return $discounts->get();
+            return $discounts->get();
         });
     }
 
