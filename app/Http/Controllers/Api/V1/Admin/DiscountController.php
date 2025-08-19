@@ -107,7 +107,7 @@ class DiscountController extends Controller
             DB::beginTransaction();
 
             $discount = $discount->fill($data);
-            $discount = $this->discountRepository->store($discount);
+            $discount = $this->discountRepository->update($discount);
 
             DB::commit();
             
@@ -144,7 +144,7 @@ class DiscountController extends Controller
                 ], 400);
             }
 
-            $discount->delete();
+            $discount = $this->discountRepository->destroy($discount);
 
             DB::commit();
 
