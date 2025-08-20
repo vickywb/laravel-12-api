@@ -14,24 +14,34 @@ class OrderRepository
 
     public function get($params = [])
     {
-        $orders = $this->order
-            ->when(!empty($params['user_id']), function ($query) use ($params) {
-                return $query->where('user_id', $params['user_id']);
-            })
-            ->when(!empty($params['order']), function ($query) use ($params) {
-                return $query->orderByRaw($params['order']);
-            })
-            ->when(!empty($params['with']), function ($query) use ($params) {
-                return $query->with($params['with']);
-            })
-            ->when(!empty($params['search']['status']), function ($query) use ($params) {
-                return $query->where('order_status', 'LIKE', '%' . $params['search']['status']  . '%');
-            });
+        $cacheKey = $this->generateCacheKey($params);
 
-        if (!empty($params['page'])) {
-            return $orders->paginate($params['page']);
-        }
+        return Cache::tags(['orders'])->remember($cacheKey, now()->addSeconds(60), function() use ($params) {
+             $orders = $this->order
+                ->when(!empty($params['user_id']), function ($query) use ($params) {
+                    return $query->where('user_id', $params['user_id']);
+                })
+                ->when(!empty($params['order']), function ($query) use ($params) {
+                    return $query->orderByRaw($params['order']);
+                })
+                ->when(!empty($params['with']), function ($query) use ($params) {
+                    return $query->with($params['with']);
+                })
+                ->when(!empty($params['search']['status']), function ($query) use ($params) {
+                    return $query->where('order_status', 'LIKE', '%' . $params['search']['status']  . '%');
+                });
 
-        return $orders->get();
+                if (!empty($params['page'])) {
+                    return $orders->paginate($params['page']);
+                }
+
+            return $orders->get();
+        });
+      
+    }
+
+    private function generateCacheKey($params)
+    {
+        return 'orders_' . md5(json_encode($params));
     }
 }
