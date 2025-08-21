@@ -21,18 +21,16 @@ class ProductRepository
         return Cache::tags(['products'])->remember($cacheKey, $this->cacheTTL, function () use ($params) {
             $products = $this->product
                 ->when(!empty($params['search']['name']), function ($query) use ($params) {
-                    return $query->where('name', 'LIKE', '%' . $params['search']['name'] . '%');
+                    return $query->where('name', 'LIKE', '%' . $params['search']['name'] . '%')
+                    ->orWhereHas('category', function ($query) use ($params) {
+                        return $query->where('name', 'LIKE', '%' . $params['search']['name'] . '%');
+                    });
                 })
                 ->when(!empty($params['order']), function ($query) use ($params) {
                     return $query->orderByRaw($params['order']);
                 })
                 ->when(!empty($params['order_desc']), function ($query) use ($params) {
                     return $query->orderByDesc($params['order_desc']);
-                })
-                ->when(!empty($params['search']['category_name']), function ($query) use ($params) {
-                    return $query->whereHas('category', function ($query) use ($params) {
-                        return $query->where('name', 'LIKE', '%' . $params['search']['category_name'] . '%');
-                    });
                 })
                 ->when(!empty($params['whereHas']), function ($query) use ($params) {
                     return $query->whereHas($params['whereHas']);
