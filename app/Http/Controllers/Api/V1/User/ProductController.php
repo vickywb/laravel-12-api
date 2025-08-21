@@ -24,8 +24,7 @@ class ProductController extends Controller
         $products = $this->productRepository->get([
             'with' => ['category'],
             'search' => [
-                'name' => request()->name,
-                'category_name' => request()->category_name,
+                'name' => request()->name
             ],
             'page' => 10,
         ]);
