@@ -19,6 +19,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\UserResource;
 use App\Models\File;
 use App\Repository\UserProfileRepository;
 use App\Services\FileService;
@@ -110,8 +111,7 @@ class AuthController extends Controller
         }
 
         return ResponseApiHelper::success("Welcome" . ' ' . ucfirst($user->name) . ' ' . "Your Account has been Successfully Created.", [
-            'name' => $user->name,
-            'email' => $user->email
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -146,10 +146,8 @@ class AuthController extends Controller
         
         // Return Success Response with User Data and Token
         return ResponseApiHelper::success('Successfully Logged In.', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role->name,
-            'token' => $token
+            'token' => $token,
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -250,6 +248,8 @@ class AuthController extends Controller
             ]);
         }
 
-        return ResponseApiHelper::success('User Profile successfully updated.');
+        return ResponseApiHelper::success('User Profile successfully updated.', [
+            'user' => new UserResource($user)
+        ]);
     }
 }
