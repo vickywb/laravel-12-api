@@ -148,7 +148,15 @@ class AuthController extends Controller
         return ResponseApiHelper::success('Successfully Logged In.', [
             'token' => $token,
             'user' => new UserResource($user)
-        ]);
+        ])->cookie(
+            'token', 
+            $token, 
+            60, // expired time (minute)
+            '/', 
+            null, 
+            true, // Secure (HTTPS only)
+            true  // HttpOnly
+        );
     }
 
     public function logout()
@@ -181,7 +189,15 @@ class AuthController extends Controller
             return ResponseApiHelper::error('An error occurred during logout process, please try again later.');
         }
 
-        return ResponseApiHelper::success('Successfully Logged Out.',);
+        return ResponseApiHelper::success('Successfully Logged Out.')->cookie(
+            'token',
+            '',
+            -1, // delete cookie
+            '/',
+            null,
+            true,
+            true
+        );
     }
 
     public function updateProfile(UpdateProfileRequest $request)
@@ -250,6 +266,13 @@ class AuthController extends Controller
 
         return ResponseApiHelper::success('User Profile successfully updated.', [
             'user' => new UserResource($user)
+        ]);
+    }
+
+    public function me()
+    {
+        return ResponseApiHelper::success('User Profile Data.', [
+            'user' => auth()->user() ? new UserResource(auth()->user()) : null
         ]);
     }
 }
