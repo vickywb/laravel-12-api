@@ -2,17 +2,18 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173'], // ini sesuaikan dengan port Vue kamu
+    'allowed_origins' => ['http://localhost:5173'], // sesuai port FE Vue
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    // supaya browser bisa akses set-cookie / kirim cookie
+    'exposed_headers' => ['Authorization'],
 
     'max_age' => 0,
 
