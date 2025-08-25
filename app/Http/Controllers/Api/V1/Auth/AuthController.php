@@ -271,8 +271,9 @@ class AuthController extends Controller
 
     public function me()
     {
+        $user = AuthHelper::getUserFromToken(request()->bearerToken());
         return ResponseApiHelper::success('User Profile Data.', [
-            'user' => auth()->user() ? new UserResource(auth()->user()) : null
+            'user' => $user ? new UserResource($user) : null
         ]);
     }
 }
