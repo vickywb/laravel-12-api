@@ -7,16 +7,17 @@ use App\Models\Product;
 use App\Helpers\AuthHelper;
 use Illuminate\Http\Request;
 use App\Helpers\LoggerHelper;
+use App\Services\CartService;
 use GuzzleHttp\Psr7\Response;
 use App\Helpers\ResponseApiHelper;
 use App\Repository\CartRepository;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CartDecreaseRequest;
-use App\Http\Requests\CartReplaceRequest;
-use App\Http\Requests\CartStoreRequest;
 use App\Http\Resources\CartResource;
-use App\Services\CartService;
+use App\Helpers\ProductDiscountHelper;
+use App\Http\Requests\CartStoreRequest;
+use App\Http\Requests\CartReplaceRequest;
+use App\Http\Requests\CartDecreaseRequest;
 
 class CartController extends Controller
 {
@@ -83,4 +84,47 @@ class CartController extends Controller
 
         return ResponseApiHelper::success('Product on cart successfully removed.' . ($deletedCart ? '' : ' Cart is empty now.'), $deletedCart ? new CartResource($deletedCart) : null);
     }
+
+    // Synchronize cart if needed
+
+    // public function syncGuestCart(Request $request)
+    // {
+    //      $request->validate([
+    //         'items' => 'required|array',
+    //         'items.*.product_id' => 'required|exists:products,id',
+    //         'items.*.quantity' => 'required|integer|min:1',
+    //     ]);
+
+    //     $items = collect($request->items)->map(function ($item) {
+    //         $product = Product::with('activeDiscount')->findOrFail($item['product_id']);
+    //         $priceAtTime = ProductDiscountHelper::getPriceAtTime($product);
+    //         return [
+    //             'product_id' => $product->id,
+    //             'quantity' => $item['quantity'],
+    //             'price' => $priceAtTime
+    //         ];
+    //     });
+
+    //     return ResponseApiHelper::success('Guest cart synchronized successfully.', [
+    //         'items' => $items,
+    //         'total_items' => $items->sum('quantity')
+    //     ]);
+    // }
+
+    // public function syncCart(Request $request)
+    // {
+    //     $request->validate([
+    //         'items' => 'required|array',
+    //         'items.*.product_id' => 'required|exists:products,id',
+    //         'items.*.quantity' => 'required|integer|min:1',
+    //     ]);
+
+    //     $user = AuthHelper::getUserFromToken($request->bearerToken());
+
+    //     $cart = $this->cartService->syncCart($user->id, $request->items);
+
+    //     return ResponseApiHelper::success('Cart synchronized successfully.', [
+    //         'cart' => $cart
+    //     ]);
+    // }
 }

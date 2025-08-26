@@ -203,4 +203,58 @@ class CartService
             throw new ApiException('Failed to delete item on cart');
         }
     }
+
+    // Synchronize cart if needed
+    
+    // public function syncCart(int $userId, array $items): void
+    // {
+    //     try {
+    //         DB::beginTransaction();
+
+    //         foreach ($items as $item) {
+    //             $product = Product::with('activeDiscount')->findOrFail($item['product_id']);
+                
+    //             // Check cart exist
+    //             $cart = CartHelper::getLockedCart($userId, $product->id);
+
+    //             $totalQuantity = ($cart ? $cart->quantity : 0) + $item['quantity'];
+                
+    //             if ($totalQuantity > $product->stock) {
+    //                 throw new ApiException('Quantity exceeds available stock.');
+    //             }
+
+    //             $priceAtTime = ProductDiscountHelper::getPriceAtTime($product);
+
+    //             if ($cart) {
+    //                 $cart->update([
+    //                     'quantity' => (int)$totalQuantity,
+    //                     'price_at_time' => $priceAtTime,
+    //                 ]);
+    //             } else {
+    //                 Cart::create([
+    //                     'user_id' => $userId,
+    //                     'product_id' => $product->id,
+    //                     'quantity' => (int)$totalQuantity,
+    //                     'price_at_time' => $priceAtTime,
+    //                 ]);
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         LoggerHelper::info('Cart synced successfully', [
+    //             'user_id' => $userId,
+    //             'items' => $items,
+    //         ]);
+    //     } catch (\Throwable $th) {
+    //         DB::rollBack();
+
+    //         LoggerHelper::error('Failed to sync cart', [
+    //             'user_id' => $userId,
+    //             'error' => $th->getMessage(),
+    //         ]);
+
+    //         throw new ApiException('Failed to sync cart');
+    //     }
+    // }
 }
