@@ -40,14 +40,13 @@ class ProductController extends Controller
     {
         $products = $this->productRepository->get([
             'search' => [
-                'name' => request()->name,
-                'category_name' => request()->category_name
+                'name' => request()->name
             ],
             'page' => 5
         ]);
 
         // Message for reponse
-        $message = request()->name || request()->category_name
+        $message = request()->name
         ? 'Filtered products retrieved successfully.'
         : 'All products retrieved successfully.';
 
