@@ -200,73 +200,100 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * Get authenticated user profile
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProfile()
+    {
+        $user = AuthHelper::getUserFromToken(request()->bearerToken());
+        
+        if (!$user) {
+            return ResponseApiHelper::error('Unauthorized', [], 401);
+        }
+
+        // Load relasi userProfile dan file
+        $user->load(['userProfile.file']);
+        
+        return ResponseApiHelper::success('Profile retrieved successfully.', [
+            'user' => new UserResource($user)
+        ]);
+    }
+
     public function updateProfile(UpdateProfileRequest $request)
     {
         $userLogin = AuthHelper::getUserFromToken(request()->bearerToken());
         $userId = $userLogin->id;
         
-        $request->merge([
-            'user_id' => $userId
-        ]);
-
-        $data = $request->only([
-            'name', 'phone_number', 'address', 'file_id', 'user_id'
-        ]);
-
+        // ✅ Gunakan validated() untuk keamanan
+        $data = $request->validated();
+       
         try {
             DB::beginTransaction();
-
+           
             $user = User::findOrFail($userId);
+           
+            // Validasi file_id exists (sudah dihandle di Request, tapi double check oke)
+            if (isset($data['file_id'])) {
+                $fileExists = File::find($data['file_id']);
+                if (!$fileExists) {
+                    return ResponseApiHelper::error(
+                        'File tidak ditemukan.',
+                        ['file_id' => 'File ID tidak valid'],
+                        422
+                    );
+                }
+            }
+           
+            // Update user table
             $user->update([
                 'name' => $data['name'],
             ]);
-
-            $oldFileId = $user->userProfile()->pluck('file_id')->toArray();
-            $newFileId = $data['file_id'];
-
-            $user->userProfile()->updateOrCreate([
-                'user_id' => $userId,
-                'phone_number' => $data['phone_number'],
-                'address' => $data['address'],
-                'file_id' =>  $newFileId 
-            ]);
-
+           
+            // Update atau create user profile
+            $user->userProfile()->updateOrCreate(
+                ['user_id' => $userId], // WHERE condition
+                [                        // DATA to update/create
+                    'phone_number' => $data['phone_number'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'file_id' => $data['file_id'] ?? null
+                ]
+            );
+           
             DB::commit();
-
-            // Log
+           
+            // Log success
             LoggerHelper::info('User Profile successfully updated.', [
                 'action' => 'update',
                 'model' => 'UserProfile',
-                'data' => $data
+                'user_id' => $userId,
+                'changes' => array_keys($data)
             ]);
+           
+            // Refresh data dari database
+            $user->refresh();
             
+            return ResponseApiHelper::success('Profil berhasil diperbarui.', [
+                'user' => new UserResource($user)
+            ]);
+           
         } catch (\Throwable $th) {
             DB::rollBack();
-
-            // Log
-            LoggerHelper::error('Failed update profile.', [
-                'request_data' => $data,
-                'error' => $th->getMessage()
+           
+            // Log error dengan detail
+            LoggerHelper::error('Failed to update profile.', [
+                'user_id' => $userId,
+                'error' => $th->getMessage(),
+                'trace' => $th->getTraceAsString()
             ]);
-
-            return ResponseApiHelper::error('An error occured during upload profile process, please try again later.');
-            
-        } finally {
-
-            $unusedFileId = array_diff($oldFileId, [$newFileId]);
-            $deleteFile = $this->fileService->deleteUnusedFiles($unusedFileId);
-
-            // Log unused file
-            LoggerHelper::info('Unused file id has been deleted.', [
-                'action' => 'delete',
-                'model' => 'File',
-                'deleted_file_id' => $unusedFileId
-            ]);
+           
+            return ResponseApiHelper::error(
+                'Gagal memperbarui profil, silakan coba lagi.',
+                ['error' => config('app.debug') ? $th->getMessage() : null],
+                500
+            );
         }
-
-        return ResponseApiHelper::success('User Profile successfully updated.', [
-            'user' => new UserResource($user)
-        ]);
     }
 
     public function me()
