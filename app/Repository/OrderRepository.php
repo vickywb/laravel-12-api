@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Models\Order;
+use Illuminate\Support\Facades\Cache;
 
 class OrderRepository
 {
