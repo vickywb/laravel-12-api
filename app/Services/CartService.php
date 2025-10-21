@@ -176,7 +176,8 @@ class CartService
         }
     }
 
-    public function removeItem(int $userId, Cart $cart): void
+    // Return boolean
+    public function removeItem(int $userId, Cart $cart): bool
     {
         try {
             DB::beginTransaction();
@@ -191,6 +192,8 @@ class CartService
                 'product_id' => $cart->product_id,
             ]);
 
+            return true;
+
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -204,57 +207,165 @@ class CartService
         }
     }
 
-    // Synchronize cart if needed
-    
-    // public function syncCart(int $userId, array $items): void
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    // Clear all cart items for user
+    public function clearCart(int $userId): bool
+    {
+        try {
+            DB::beginTransaction();
+            
+            $deletedCount = Cart::where('user_id', $userId)->delete();
+            
+            DB::commit();
 
-    //         foreach ($items as $item) {
-    //             $product = Product::with('activeDiscount')->findOrFail($item['product_id']);
-                
-    //             // Check cart exist
-    //             $cart = CartHelper::getLockedCart($userId, $product->id);
+            // Log
+            LoggerHelper::info('Cart cleared successfully.', [
+                'user_id' => $userId,
+                'deleted_items' => $deletedCount,
+            ]);
 
-    //             $totalQuantity = ($cart ? $cart->quantity : 0) + $item['quantity'];
-                
-    //             if ($totalQuantity > $product->stock) {
-    //                 throw new ApiException('Quantity exceeds available stock.');
-    //             }
+            return true;
 
-    //             $priceAtTime = ProductDiscountHelper::getPriceAtTime($product);
+        } catch (\Throwable $th) {
+            DB::rollBack();
 
-    //             if ($cart) {
-    //                 $cart->update([
-    //                     'quantity' => (int)$totalQuantity,
-    //                     'price_at_time' => $priceAtTime,
-    //                 ]);
-    //             } else {
-    //                 Cart::create([
-    //                     'user_id' => $userId,
-    //                     'product_id' => $product->id,
-    //                     'quantity' => (int)$totalQuantity,
-    //                     'price_at_time' => $priceAtTime,
-    //                 ]);
-    //             }
-    //         }
+            // Log
+            LoggerHelper::error('Failed to clear cart', [
+                'user_id' => $userId,
+                'error' => $th->getMessage(),
+            ]);
+            
+            throw new ApiException('Failed to clear cart');
+        }
+    }
 
-    //         DB::commit();
+    // Get cart summary
+    public function getCartSummary(int $userId): array
+    {
+        $carts = Cart::with(['product', 'product.activeDiscount'])
+                    ->where('user_id', $userId)
+                    ->get();
 
-    //         LoggerHelper::info('Cart synced successfully', [
-    //             'user_id' => $userId,
-    //             'items' => $items,
-    //         ]);
-    //     } catch (\Throwable $th) {
-    //         DB::rollBack();
+        $totalItems = $carts->sum('quantity');
+        $totalPrice = $carts->sum(function ($cart) {
+            return $cart->quantity * $cart->price_at_time;
+        });
 
-    //         LoggerHelper::error('Failed to sync cart', [
-    //             'user_id' => $userId,
-    //             'error' => $th->getMessage(),
-    //         ]);
+        return [
+            'total_items' => $totalItems,
+            'total_price' => $totalPrice,
+            'items_count' => $carts->count(),
+        ];
+    }
 
-    //         throw new ApiException('Failed to sync cart');
-    //     }
-    // }
+    // Synchronize cart for guest users when they login
+    public function syncCart(int $userId, array $items): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $syncedItems = [];
+            $errors = [];
+
+            foreach ($items as $item) {
+                try {
+                    $product = Product::with('activeDiscount')->findOrFail($item['product_id']);
+                    
+                    // Check existing cart
+                    $cart = CartHelper::getLockedCart($userId, $product->id);
+                    
+                    $quantity = (int)$item['quantity'];
+                    $totalQuantity = ($cart ? $cart->quantity : 0) + $quantity;
+                    
+                    if ($totalQuantity > $product->stock) {
+                        $errors[] = "Product {$product->name}: Quantity exceeds available stock.";
+                        continue;
+                    }
+
+                    $priceAtTime = ProductDiscountHelper::getPriceAtTime($product);
+
+                    if ($cart) {
+                        $cart->update([
+                            'quantity' => $totalQuantity,
+                            'price_at_time' => $priceAtTime,
+                        ]);
+                    } else {
+                        $cart = Cart::create([
+                            'user_id' => $userId,
+                            'product_id' => $product->id,
+                            'quantity' => $quantity,
+                            'price_at_time' => $priceAtTime,
+                        ]);
+                    }
+
+                    $syncedItems[] = $cart->fresh(['product']);
+
+                } catch (\Exception $e) {
+                    $errors[] = "Product ID {$item['product_id']}: " . $e->getMessage();
+                }
+            }
+
+            DB::commit();
+
+            LoggerHelper::info('Cart synced successfully', [
+                'user_id' => $userId,
+                'synced_items' => count($syncedItems),
+                'errors' => count($errors),
+            ]);
+
+            return [
+                'synced_items' => $syncedItems,
+                'errors' => $errors,
+                'success_count' => count($syncedItems),
+                'error_count' => count($errors),
+            ];
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            LoggerHelper::error('Failed to sync cart', [
+                'user_id' => $userId,
+                'error' => $th->getMessage(),
+            ]);
+
+            throw new ApiException('Failed to sync cart');
+        }
+    }
+
+    // Validate cart before checkout
+    public function validateCartForCheckout(int $userId): array
+    {
+        $carts = Cart::with(['product'])->where('user_id', $userId)->get();
+        
+        if ($carts->isEmpty()) {
+            throw new ApiException('Cart is empty');
+        }
+
+        $errors = [];
+        $validItems = [];
+
+        foreach ($carts as $cart) {
+            if (!$cart->product) {
+                $errors[] = "Product not found for cart item ID: {$cart->id}";
+                continue;
+            }
+
+            if ($cart->quantity > $cart->product->stock) {
+                $errors[] = "Insufficient stock for {$cart->product->name}. Available: {$cart->product->stock}, Requested: {$cart->quantity}";
+                continue;
+            }
+            
+            if (isset($cart->product->deleted_at) && $cart->product->deleted_at !== null) {
+                $errors[] = "Product {$cart->product->name} is no longer available";
+                continue;
+            }
+
+            $validItems[] = $cart;
+        }
+
+        return [
+            'valid_items' => $validItems,
+            'errors' => $errors,
+            'is_valid' => empty($errors)
+        ];
+    }
 }
