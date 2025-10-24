@@ -76,4 +76,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+
+    // Accessor
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->userProfile?->file?->file_url 
+            ?? asset('images/no-image.png');
+    }
 }
