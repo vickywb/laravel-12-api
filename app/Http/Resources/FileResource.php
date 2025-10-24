@@ -18,6 +18,9 @@ class FileResource extends JsonResource
             'id' => $this->id,
             'file_url' => $this->file_url,
             'upload_at' => $this->upload_at->format('d-m-Y H:i:s'),
+            'size' => $this->size,
+            'formatted_size' => $this->formatted_size,
+            'mime_type' => $this->mime_type,
         ];
     }
 }
