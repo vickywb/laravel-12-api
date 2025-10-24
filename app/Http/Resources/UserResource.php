@@ -19,7 +19,8 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role ? $this->role->name : null,
-            'user_profile' => new FileResource($this->userProfile->file ?? null)
+            'user_profile' => new FileResource($this->userProfile->file ?? null),
+            'photo_profile_url' => $this->userProfile?->file?->file_url ?? asset('images/no-image.png')
         ];
     }
 }
