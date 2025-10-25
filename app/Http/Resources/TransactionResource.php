@@ -22,6 +22,7 @@ class TransactionResource extends JsonResource
             'total_price' => (string) $this->total_price,
             'bank' => $this->bank,
             'paid_at' => $this->paid_at ? $this->paid_at->format('Y-m-d H:i:s') : null,
+            'transaction_details' => TransactionDetailResource::collection($this->whenLoaded('transactionDetails')),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s')
         ];
