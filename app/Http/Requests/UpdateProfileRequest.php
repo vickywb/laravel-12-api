@@ -25,10 +25,10 @@ class UpdateProfileRequest extends FormRequest
     public function rules(): array
     {                
         return [
-            'name' => 'string|max:50',
-            'phone_number' => 'string|digits_between:8,15',
-            'address' => 'string|max:255',
-            'file_id' => 'required'
+            'name' => 'required|string|max:50',
+            'phone_number' => 'nullable|string|digits_between:8,15',
+            'address' => 'nullable|string|max:255',
+            'file_id' => 'nullable|exists:files,id'
         ];
     }
 }
