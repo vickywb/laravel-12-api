@@ -23,7 +23,7 @@ class FileStoreRequest extends FormRequest
     {
         return [
             'files' => 'required|array|min:1',
-            'files.*' => 'required|file|mimes:jpg,png,jpeg|max:2048'
+            'files.*' => 'required|file|mimes:jpg,png|max:5120'
         ];
     }
 }
