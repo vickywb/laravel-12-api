@@ -18,45 +18,82 @@ class CartService
         // Search active product discount on product
         $product = Product::with('activeDiscount')->findOrFail($productId);
 
-        // Check product exists on cart using helper
-        $cart = CartHelper::getLockedCart($userId, $productId);
-
-        // Check quantity in cart
-        $totalQuantity = ($cart ? $cart->quantity : 0) + $quantity;
-
-        if ($totalQuantity > $product->stock) {
-            throw new ApiException('Quantity exceeds available stock.');
-        }
-
         // Product Price
         $priceAtTime = ProductDiscountHelper::getPriceAtTime($product);
 
         try {
             DB::beginTransaction();
 
+            // Try to lock existing cart row
+            $cart = CartHelper::getLockedCart($userId, $productId);
+
             if ($cart) {
-                // if product already exists in cart, update the quantity
-                $cart->increment('quantity', (int) $quantity);
-            } else {
-                // If not exists, create new cart
-                $cart = Cart::create([
-                    'user_id'    => $userId,
+                $totalQuantity = $cart->quantity + $quantity;
+                if ($totalQuantity > $product->stock) {
+                    throw new ApiException('Quantity exceeds available stock.');
+                }
+
+                $cart->increment('quantity', (int)$quantity);
+
+                DB::commit();
+
+                LoggerHelper::info('Cart item successfully added.', [
+                    'user_id' => $userId,
                     'product_id' => $productId,
-                    'quantity'   => (int)$quantity,
-                    'price_at_time' => $priceAtTime
+                    'quantity' => (int)$quantity,
                 ]);
+
+                return $cart->fresh(['product']);
             }
 
-            DB::commit();
+            // No existing cart — attempt to create new row
+            if ($quantity > $product->stock) {
+                throw new ApiException('Quantity exceeds available stock.');
+            }
 
-            // Log
-            LoggerHelper::info('Cart item successfully added.', [
-                'user_id' => $userId,
-                'product_id' => $productId,
-                'quantity' => (int)$quantity,
-            ]);
+            try {
+                $newCart = Cart::create([
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'quantity' => (int)$quantity,
+                    'price_at_time' => $priceAtTime,
+                ]);
 
-            return $cart->fresh(['product']);
+                DB::commit();
+
+                LoggerHelper::info('Cart item successfully added.', [
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'quantity' => (int)$quantity,
+                ]);
+
+                return $newCart->fresh(['product']);
+
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Possible duplicate insert from concurrent request — try to lock & update instead via helper
+                $existing = CartHelper::getLockedCart($userId, $productId);
+
+                if ($existing) {
+                    $totalQuantity = $existing->quantity + $quantity;
+                    if ($totalQuantity > $product->stock) {
+                        throw new ApiException('Quantity exceeds available stock.');
+                    }
+
+                    $existing->increment('quantity', (int)$quantity);
+
+                    DB::commit();
+
+                    LoggerHelper::info('Cart item successfully added.', [
+                        'user_id' => $userId,
+                        'product_id' => $productId,
+                        'quantity' => (int)$quantity,
+                    ]);
+
+                    return $existing->fresh(['product']);
+                }
+
+                throw $e;
+            }
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -66,17 +103,17 @@ class CartService
                 'user_id' => $userId,
                 'error' => $th->getMessage(),
             ]);
-            
+
             throw new ApiException('Failed to add item on cart');
         }
     }
 
     public function decreaseItem(int $userId, int $quantity, Cart $cart): ?Cart
     {
-        $cart = CartHelper::getLockedCartById(['product'], $cart->id);
-
         try {
             DB::beginTransaction();
+
+            $cart = CartHelper::getLockedCartById(['product'], $cart->id);
 
             if ($quantity > $cart->quantity) {
                 throw new ApiException('Cannot decrease more than current quantity.');
@@ -128,10 +165,10 @@ class CartService
 
     public function replaceItem(int $userId, int $quantity, Cart $cart): ?Cart
     {
-        $cart = CartHelper::getLockedCartById(['product'], $cart->id);
-        
         try {
             DB::beginTransaction();
+
+            $cart = CartHelper::getLockedCartById(['product'], $cart->id);
                 
             if ($quantity > $cart->product->stock) {
                 throw new ApiException('Quantity exceeds available stock.');
