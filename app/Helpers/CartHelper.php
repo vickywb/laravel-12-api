@@ -9,8 +9,8 @@ class CartHelper
     // Get Locked cart by user and product
     public static function getLockedCart(int $userId, int $productId): ?Cart
     {
-        return Cart::where('product_id', $productId)
-            ->where('user_id', $userId)
+        return Cart::where('user_id', $userId)
+            ->where('product_id', $productId)
             ->lockForUpdate()
             ->first();
     }
